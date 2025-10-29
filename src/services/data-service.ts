@@ -1,5 +1,6 @@
 import { knownFolders, File } from '@nativescript/core';
 import { Character } from '../../types/character'; // 引入我们之前定义的模型
+import type { Protagonist } from '../../types/protagonist';
 const Sqlite = require('nativescript-sqlite'); // 引入 sqlite 插件
 
 /**
@@ -10,6 +11,7 @@ const Sqlite = require('nativescript-sqlite'); // 引入 sqlite 插件
 class DatabaseService {
   private static instance: DatabaseService;
   private database: any; // 用于存储数据库连接实例
+  private initPromise: Promise<void> | null = null; // 防止并发初始化导致重复日志
 
   // 构造函数设为私有，防止外部通过 new() 创建新实例
   private constructor() {}
@@ -27,42 +29,64 @@ class DatabaseService {
    * 这个方法会打开数据库连接，创建表（如果不存在），并从 db.json 植入初始数据。
    */
   public async init(): Promise<void> {
-    if (this.database) {
-      return; // 如果已经初始化，则直接返回
+    // 已初始化直接返回
+    if (this.database) return;
+
+    // 并发调用时复用同一个初始化 Promise，避免重复日志与建表
+    if (this.initPromise) {
+      await this.initPromise;
+      return;
     }
 
-    try {
-      // 打开（或创建）一个名为 'app.db' 的数据库文件
-      this.database = await new Sqlite('app.db');
-      console.log('数据库连接已打开');
+    this.initPromise = (async () => {
+      try {
+        // 打开（或创建）数据库
+        this.database = await new Sqlite('app.db');
+        console.log('数据库连接已打开');
 
-      // 执行我们设计的 CREATE TABLE 语句
-      const createTableSql = `
-        CREATE TABLE IF NOT EXISTS characters (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            first_name TEXT NOT NULL,
-            last_name TEXT NOT NULL,
-            age INTEGER NOT NULL,
-            occupation TEXT,
-            core_identity TEXT,
-            psychological_profile TEXT,
-            physical_profile TEXT,
-            sexual_profile TEXT,
-            metrics TEXT,
-            wellbeing TEXT,
-            sexual_skill TEXT,
-            body_development TEXT
-        );`;
-      await this.database.execSQL(createTableSql);
-      console.log('\'characters\' 表已准备就绪');
+        // 建 characters 表
+        const createTableSql = `
+          CREATE TABLE IF NOT EXISTS characters (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              first_name TEXT NOT NULL,
+              last_name TEXT NOT NULL,
+              age INTEGER NOT NULL,
+              occupation TEXT,
+              core_identity TEXT,
+              psychological_profile TEXT,
+              physical_profile TEXT,
+              sexual_profile TEXT,
+              metrics TEXT,
+              wellbeing TEXT,
+              sexual_skill TEXT,
+              body_development TEXT
+          );`;
+        await this.database.execSQL(createTableSql);
+        console.log('\'characters\' 表已准备就绪');
 
-      // 检查表中是否有数据，如果没有，则从 db.json 植入
-      await this.seedInitialData();
+        // 建 protagonist 表
+        const createProtagonistSql = `
+          CREATE TABLE IF NOT EXISTS protagonist (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              base_attributes TEXT,
+              basic_description TEXT
+          );`;
+        await this.database.execSQL(createProtagonistSql);
+        console.log('\'protagonist\' 表已准备就绪');
 
-    } catch (error) {
-      console.error('数据库初始化失败:', error);
-      throw error;
-    }
+        // 植入初始数据（仅当为空）
+        await this.seedInitialData();
+        await this.seedProtagonistInitialData();
+      } catch (error) {
+        console.error('数据库初始化失败:', error);
+        throw error;
+      } finally {
+        // 初始化完成后清理 Promise 引用
+        this.initPromise = null;
+      }
+    })();
+
+    await this.initPromise;
   }
 
   /**
@@ -90,6 +114,74 @@ class DatabaseService {
     } catch(error) {
         console.error('从 db.json 植入数据失败:', error);
     }
+  }
+
+  /**
+   * 植入主角的初始数据 (仅当数据库为空时)
+   */
+  private async seedProtagonistInitialData(): Promise<void> {
+    const countResult = await this.database.get('SELECT COUNT(*) as count FROM protagonist');
+    if (countResult && countResult[0] > 0) {
+      console.log('主角表已有数据，跳过植入。');
+      return;
+    }
+
+    const initialProtagonist: Protagonist = {
+      id: 1,
+      base_attributes: {
+        level: 1,
+        experience: 100,
+        experience_to_next_level: 1000,
+        attribute_points_available: 50,
+        physique: 60,
+        dexterity: 55,
+        stamina: 65,
+        intellect: 85,
+        insight: 90,
+        charisma: 75,
+        oral_skill: 40,
+        manual_skill: 50,
+        endurance_control: 60,
+        anatomy_knowledge: 70,
+        rhythm_mastery: 45,
+        virility_level: 60,
+      },
+      basic_description: {
+        last_name: '储',
+        first_name: '进',
+        occupation: '医疗集团运营专员',
+        is_married: false,
+        has_children: false,
+        physical_profile: {
+          general: {
+            body_type: '中等偏瘦',
+            height_cm: 182,
+          },
+          sexual_anatomy: {
+            penis: {
+              girth_cm_erect: 13.5,
+              is_circumcised: false,
+              appearance_tags: ['标准型', '成熟色泽'],
+              length_cm_erect: 17,
+            },
+          },
+        },
+        sexual_profile: {
+          personal_kinks: {
+            BDSM: { role: 'Dominant', active: true },
+            age_play: { role: 'daddy', active: true },
+            praise_kink: { active: true },
+          },
+          attraction_profile: {
+            physical_types: ['娇小纤细', '萝莉'],
+            personality_archetypes: ['清纯学妹', '元气笨蛋', '邻家女孩'],
+          },
+        },
+      },
+    };
+
+    await this.insertProtagonist(initialProtagonist);
+    console.log('已植入主角初始数据。');
   }
   
   // --- CRUD 方法 ---
@@ -142,6 +234,26 @@ class DatabaseService {
       await this.database.execSQL('DELETE FROM characters WHERE id = ?', [id]);
   }
 
+  /**
+   * 获取主角信息（目前仅一条记录，id=1）
+   */
+  public async getProtagonist(): Promise<Protagonist | null> {
+    const row = await this.database.get('SELECT * FROM protagonist WHERE id = 1');
+    return row ? this.mapRowToProtagonist(row) : null;
+  }
+
+  /**
+   * 保存主角信息（更新基础属性与基础描述）
+   */
+  public async saveProtagonist(p: Protagonist): Promise<void> {
+    const existing = await this.database.get('SELECT id FROM protagonist WHERE id = ?', [p.id]);
+    if (existing) {
+      await this.updateProtagonist(p);
+    } else {
+      await this.insertProtagonist(p);
+    }
+  }
+
 
   // --- 私有辅助方法 ---
 
@@ -162,6 +274,24 @@ class DatabaseService {
       // 注意：UPDATE 语句的参数顺序不同，id 在最后
       const params = this.mapCharacterToParams(character, true);
       await this.database.execSQL(sql, params);
+  }
+
+  private async insertProtagonist(p: Protagonist): Promise<void> {
+    const sql = `
+      INSERT INTO protagonist (base_attributes, basic_description)
+      VALUES (?, ?);
+    `;
+    const params = this.mapProtagonistToParams(p, false);
+    await this.database.execSQL(sql, params);
+  }
+
+  private async updateProtagonist(p: Protagonist): Promise<void> {
+    const sql = `
+      UPDATE protagonist SET base_attributes = ?, basic_description = ?
+      WHERE id = ?;
+    `;
+    const params = this.mapProtagonistToParams(p, true);
+    await this.database.execSQL(sql, params);
   }
   
   /**
@@ -186,6 +316,14 @@ class DatabaseService {
       wellbeing: JSON.parse(row[10]),
       sexual_skill: JSON.parse(row[11]),
       body_development: JSON.parse(row[12]),
+    };
+  }
+
+  private mapRowToProtagonist(row: any[]): Protagonist {
+    return {
+      id: row[0],
+      base_attributes: JSON.parse(row[1]),
+      basic_description: JSON.parse(row[2]),
     };
   }
 
@@ -214,6 +352,17 @@ class DatabaseService {
           params.push(character.id); // for WHERE id = ?
       }
       return params;
+  }
+
+  private mapProtagonistToParams(p: Protagonist, forUpdate = false): any[] {
+    const params: (string | number)[] = [
+      JSON.stringify(p.base_attributes),
+      JSON.stringify(p.basic_description),
+    ];
+    if (forUpdate) {
+      params.push(p.id);
+    }
+    return params;
   }
 }
 

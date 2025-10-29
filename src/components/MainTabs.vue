@@ -31,8 +31,8 @@ const onSelectedIndexChanged = (args: any) => {
       <slot name="characters" />
     </TabViewItem>
 
-    <!-- Tab 1: 属性 -->
-    <TabViewItem title="属性">
+    <!-- Tab 1: 主角 -->
+    <TabViewItem title="主角">
       <slot name="attributes" />
     </TabViewItem>
 

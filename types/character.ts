@@ -108,9 +108,6 @@ export interface BodyDevelopment {
     multiple_orgasm_unlocked: boolean;
 }
 
-// 注意：为了简洁，这里我只定义了两个嵌套接口作为示例。
-// 在实际项目中，你会为 physical_profile, sexual_profile 等所有对象都创建接口。
-
 // 这是我们最主要的人物模型接口
 export interface Character {
   id: number;

@@ -6,7 +6,7 @@ import AddCharacter from './AddCharacter.vue';
 import AppHeader from './AppHeader.vue';
 import MainTabs from './MainTabs.vue';
 import TabsCharacters from './TabsCharacters.vue';
-import TabsAttributes from './TabsAttributes.vue';
+import TabsProtagonist from './TabsProtagonist.vue';
 import TabsInventory from './TabsInventory.vue';
 import TabsSettings from './TabsSettings.vue';
 import { databaseService } from '../services/data-service'; // 导入本地数据服务
@@ -18,9 +18,9 @@ const instance = getCurrentInstance();
 const characters = ref<Character[]>([]);
 const isLoading = ref(true); // 用于控制加载指示器的显示
 const errorMessage = ref(''); // 用于在出错时显示信息
-const currentTab = ref(0); // 0: 微信, 1: 通讯录, 2: 发现, 3: 我
+const currentTab = ref(0); //
 const headerTitle = computed(() => {
-  return ['角色', '属性', '背包', '设置'][currentTab.value] || '角色';
+  return ['角色', '主角', '背包', '设置'][currentTab.value] || '角色';
 });
 
 // onMounted 现在是一个 async 函数，因为它需要执行异步的数据库操作
@@ -94,7 +94,7 @@ const openAddCharacter = () => {
         </template>
 
         <template #attributes>
-          <TabsAttributes />
+          <TabsProtagonist />
         </template>
 
         <template #inventory>
