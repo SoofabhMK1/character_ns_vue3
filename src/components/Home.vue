@@ -4,6 +4,10 @@ import { ItemEventData } from '@nativescript/core';
 import CharacterDetail from './CharacterDetail.vue';
 import AppHeader from './AppHeader.vue';
 import MainTabs from './MainTabs.vue';
+import TabsCharacters from './TabsCharacters.vue';
+import TabsAttributes from './TabsAttributes.vue';
+import TabsInventory from './TabsInventory.vue';
+import TabsSettings from './TabsSettings.vue';
 import { databaseService } from '../services/data-service'; // 导入本地数据服务
 import { Character } from '../../types/character'; // 导入类型定义
 
@@ -59,13 +63,28 @@ const onItemTap = (event: ItemEventData) => {
     <Page iosOverflowSafeArea="true" class="page">
       <AppHeader :title="headerTitle" :showBackButton="false" />
 
-      <MainTabs
-        v-model:currentTab="currentTab"
-        :isLoading="isLoading"
-        :errorMessage="errorMessage"
-        :characters="characters"
-        :onItemTap="onItemTap"
-      />
+      <MainTabs v-model:currentTab="currentTab">
+        <template #characters>
+          <TabsCharacters
+            :isLoading="isLoading"
+            :errorMessage="errorMessage"
+            :characters="characters"
+            @itemTap="onItemTap"
+          />
+        </template>
+
+        <template #attributes>
+          <TabsAttributes />
+        </template>
+
+        <template #inventory>
+          <TabsInventory />
+        </template>
+
+        <template #settings>
+          <TabsSettings />
+        </template>
+      </MainTabs>
 
     </Page>
   </Frame>
