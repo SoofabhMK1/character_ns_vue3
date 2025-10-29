@@ -10,14 +10,14 @@
           <Label :text="character.core_identity.last_name + character.core_identity.first_name" class="text-2xl font-bold text-center" />
           <Label :text="character.core_identity.occupation" class="mt-2 text-center text-gray-600" />
         </StackLayout>
-        <!-- spacer: 强制首个与第二个卡片之间的固定间距 -->
+        
         <StackLayout height="8" />
 
         <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-2">
           <StackLayout>
             <GridLayout v-for="(attr, index) in metricAttributes" :key="index" columns="auto, *, auto" class="mb-2">
 
-              <Label col="0" :text="attr.label" class="w-14 text-base align-middle" />
+              <Label col="0" :text="attr.label" class="w-24 text-base align-middle" />
 
               <Progress 
                 col="1" 
@@ -27,7 +27,7 @@
                 class="align-middle"
               />
 
-              <Label col="2" :text="`${attr.value} / 100`" class="w-16 text-right text-sm text-gray-600 align-middle" />
+              <Label col="2" :text="`${attr.value} / 100`" class="w-24 text-right text-sm text-gray-600 align-middle" />
 
             </GridLayout>
           </StackLayout>
@@ -183,7 +183,7 @@
 
             <StackLayout class="p-3 bg-white rounded-lg space-y-2">
               <Label text="🍒 胸部" class="text-lg font-bold" />
-              <StackLayout class="border-b border-gray-200" />
+              <StackLayout class="border-b border-gray-300" />
               <GridLayout columns="*, *">
                 <Label col="0" :text="'罩杯: ' + character.physical_profile.sexual_anatomy.breasts.cup_size" />
                 <Label col="1" :text="'形状: ' + character.physical_profile.sexual_anatomy.breasts.shape" class="text-right" />
@@ -193,7 +193,7 @@
                 <Label col="1" :text="'乳头类型: ' + character.physical_profile.sexual_anatomy.breasts.nipple_type" class="text-right" />
               </GridLayout>
               <GridLayout columns="auto, *, auto" class="align-middle">
-                <Label col="0" text="紧实度:" class="w-16" />
+                <Label col="0" text="紧实度:" class="w-24" />
                 <FlexboxLayout col="1" class="mx-2 align-middle">
                   <StackLayout v-for="n in 10" :key="n" :class="n <= Number(character.physical_profile.sexual_anatomy.breasts.firmness) ? 'bg-pink-400' : 'bg-gray-200'" class="flex-1 h-2 rounded-full mx-px" />
                 </FlexboxLayout>
@@ -203,7 +203,7 @@
 
             <StackLayout class="p-3 bg-white rounded-lg space-y-2">
               <Label text="🌸 私密花园" class="text-lg font-bold" />
-              <StackLayout class="border-b border-gray-200" />
+              <StackLayout class="border-b border-gray-300" />
               <Label :text="'外观: ' + character.physical_profile.sexual_anatomy.vagina.labia_shape" textWrap="true" />
               <GridLayout columns="*, auto">
                 <Label col="0" :text="'颜色: ' + character.physical_profile.sexual_anatomy.vagina.labia_color" />
@@ -213,21 +213,21 @@
                 </FlexboxLayout>
               </GridLayout>
               <GridLayout columns="auto, *, auto" class="align-middle">
-                <Label col="0" text="紧致度:" class="w-16" />
+                <Label col="0" text="紧致度:" class="w-24" />
                 <FlexboxLayout col="1" class="mx-2 align-middle">
                   <StackLayout v-for="n in 10" :key="n" :class="n <= Number(character.physical_profile.sexual_anatomy.vagina.baseline_tightness) ? 'bg-pink-400' : 'bg-gray-200'" class="flex-1 h-2 rounded-full mx-px" />
                 </FlexboxLayout>
                 <Label col="2" :text="character.physical_profile.sexual_anatomy.vagina.baseline_tightness + '/10'" class="text-sm text-gray-500" />
               </GridLayout>
               <GridLayout columns="auto, *, auto" class="align-middle">
-                <Label col="0" text="爱液:" class="w-16" />
+                <Label col="0" text="爱液:" class="w-24" />
                 <FlexboxLayout col="1" class="mx-2 align-middle">
                   <StackLayout v-for="n in 10" :key="n" :class="n <= Number(character.physical_profile.sexual_anatomy.vagina.baseline_lubrication) ? 'bg-pink-400' : 'bg-gray-200'" class="flex-1 h-2 rounded-full mx-px" />
                 </FlexboxLayout>
                 <Label col="2" :text="character.physical_profile.sexual_anatomy.vagina.baseline_lubrication + '/10'" class="text-sm text-gray-500" />
               </GridLayout>
               <GridLayout columns="auto, *, auto" class="align-middle">
-                <Label col="0" text="敏感点:" class="w-16" />
+                <Label col="0" text="敏感点:" class="w-24" />
                 <FlexboxLayout col="1" class="mx-2 align-middle">
                   <StackLayout v-for="n in 10" :key="n" :class="n <= Number(character.physical_profile.sexual_anatomy.vagina.clitoris_sensitivity) ? 'bg-pink-400' : 'bg-gray-200'" class="flex-1 h-2 rounded-full mx-px" />
                 </FlexboxLayout>
@@ -237,7 +237,7 @@
 
             <StackLayout class="p-3 bg-white rounded-lg space-y-2">
               <Label text="🍑 身形与足部" class="text-lg font-bold" />
-              <StackLayout class="border-b border-gray-200" />
+              <StackLayout class="border-b border-gray-300" />
               <GridLayout columns="*, *">
                 <Label col="0" :text="'臀形: ' + character.physical_profile.sexual_anatomy.buttocks_shape" />
                 <Label col="1" :text="'腰臀比: ' + character.physical_profile.sexual_anatomy.waist_hip_ratio" class="text-right" />
@@ -248,7 +248,7 @@
               </GridLayout>
               <Label :text="'足部状态: ' + character.physical_profile.sexual_anatomy.feet.skin_condition" textWrap="true" />
               <GridLayout columns="auto, *, auto" class="align-middle mt-2">
-                <Label col="0" text="后庭紧致:" class="w-20" />
+                <Label col="0" text="后庭紧致:" class="w-24" />
                 <FlexboxLayout col="1" class="mx-2 align-middle">
                   <StackLayout v-for="n in 10" :key="n" :class="n <= Number(character.physical_profile.sexual_anatomy.anus.tightness) ? 'bg-pink-400' : 'bg-gray-200'" class="flex-1 h-2 rounded-full mx-px" />
                 </FlexboxLayout>
@@ -324,7 +324,7 @@
             </StackLayout>
           </StackLayout>
 
-          <StackLayout class="p-3 bg-white rounded-md space-y-3">
+          <StackLayout class="p-3 bg-white rounded-lg space-y-3">
             <StackLayout>
               <Label text="💬 沟通风格" class="font-bold text-base" />
               <Label :text="character.sexual_profile.communication_style" textWrap="true" class="mt-1 text-gray-700" />
@@ -365,7 +365,7 @@
         </GridLayout>
       </StackLayout>
 
-      <StackLayout height="8" />
+      <!-- spacer removed: 统一使用父容器间距 -->
 
       <!-- Sexual Skill 性技巧 -->
       <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-2">
@@ -379,7 +379,7 @@
         </GridLayout>
       </StackLayout>
 
-      <StackLayout height="8" />
+      <!-- spacer removed: 统一使用父容器间距 -->
 
       <!-- Body Development 身体开发 -->
       <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-2">
@@ -472,11 +472,11 @@ const sexualSkillAttributes = computed(() => {
 const bodyDevelopmentAttributes = computed(() => {
   if (!props.character?.body_development) return [] as Array<{label: string; value: number; max: number; color: string}>;
   return [
-    { label: '疼痛耐受', value: props.character.body_development.pain_tolerance, max: 10, color: '#6b7280' },
-    { label: '后庭接受', value: props.character.body_development.anal_acceptance, max: 10, color: '#ef4444' },
-    { label: '子宫敏感', value: props.character.body_development.womb_sensitivity, max: 10, color: '#f59e0b' },
-    { label: 'G 点敏感', value: props.character.body_development.g_spot_sensitivity, max: 10, color: '#a78bfa' },
-    { label: '阴蒂敏感', value: props.character.body_development.clitoris_sensitivity, max: 10, color: '#f472b6' },
+    { label: '疼痛耐受', value: props.character.body_development.pain_tolerance, max: 100, color: '#6b7280' },
+    { label: '后庭接受', value: props.character.body_development.anal_acceptance, max: 100, color: '#ef4444' },
+    { label: '子宫敏感', value: props.character.body_development.womb_sensitivity, max: 100, color: '#f59e0b' },
+    { label: 'G 点敏感', value: props.character.body_development.g_spot_sensitivity, max: 100, color: '#a78bfa' },
+    { label: '阴蒂敏感', value: props.character.body_development.clitoris_sensitivity, max: 100, color: '#f472b6' },
   ];
 });
 </script>
