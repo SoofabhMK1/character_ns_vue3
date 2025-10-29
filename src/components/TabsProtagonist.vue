@@ -1,9 +1,11 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, computed } from 'nativescript-vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'nativescript-vue';
 import { databaseService } from '../services/data-service';
 import type { Protagonist } from '../../types/protagonist';
 
 defineOptions({ name: 'TabsProtagonist' });
+
+const props = defineProps<{ dbReady: boolean }>();
 
 const protagonist = ref<Protagonist | null>(null);
 const isLoading = ref(true);
@@ -13,12 +15,15 @@ const errorMessage = ref('');
 const isAlive = ref(true);
 onUnmounted(() => { isAlive.value = false; });
 
-onMounted(async () => {
+const loadedOnce = ref(false);
+
+const loadProtagonist = async () => {
   try {
-    await databaseService.init();
+    isLoading.value = true;
     const p = await databaseService.getProtagonist();
     if (!isAlive.value) return;
     protagonist.value = p;
+    loadedOnce.value = true;
   } catch (e) {
     if (!isAlive.value) return;
     console.error('加载主角信息失败:', e);
@@ -27,6 +32,18 @@ onMounted(async () => {
     if (isAlive.value) {
       isLoading.value = false;
     }
+  }
+};
+
+onMounted(async () => {
+  if (props.dbReady && !loadedOnce.value) {
+    await loadProtagonist();
+  }
+});
+
+watch(() => props.dbReady, async (ready) => {
+  if (ready && !loadedOnce.value && isAlive.value) {
+    await loadProtagonist();
   }
 });
 
@@ -105,6 +122,8 @@ const growth = computed(() => {
           <Label v-if="protagonist" :text="protagonist.basic_description.last_name + protagonist.basic_description.first_name" class="text-2xl font-bold text-center" />
           <Label v-if="protagonist" :text="protagonist.basic_description.occupation" class="mt-2 text-center text-gray-600" />
         </StackLayout>
+
+        <StackLayout height="8" />
 
         <!-- 成长状态 -->
         <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-2">

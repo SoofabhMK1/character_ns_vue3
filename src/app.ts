@@ -1,4 +1,5 @@
 import { createApp, registerElement } from 'nativescript-vue';
+import { createPinia } from 'pinia';
 import Home from './components/Home.vue';
 
 // 使用 TabView（核心模块存在：@nativescript/core/ui/tab-view）
@@ -10,4 +11,6 @@ try {
   // 兜底：若注册失败，应用仍可启动
 }
 
-createApp(Home).start();
+const app = createApp(Home);
+app.use(createPinia());
+app.start();

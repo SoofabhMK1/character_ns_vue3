@@ -10,15 +10,21 @@ import TabsProtagonist from './TabsProtagonist.vue';
 import TabsInventory from './TabsInventory.vue';
 import TabsSettings from './TabsSettings.vue';
 import { databaseService } from '../services/data-service'; // 导入本地数据服务
+import { useAppStore } from '../stores/app';
+import { useCharactersStore } from '../stores/characters';
 import { Character } from '../../types/character'; // 导入类型定义
 
 const instance = getCurrentInstance();
 
 // 1. 初始化响应式变量
-const characters = ref<Character[]>([]);
-const isLoading = ref(true); // 用于控制加载指示器的显示
-const errorMessage = ref(''); // 用于在出错时显示信息
+const appStore = useAppStore();
+const charactersStore = useCharactersStore();
+
+const characters = computed(() => charactersStore.characters);
+const isLoading = computed(() => appStore.isInitializing || charactersStore.isLoading);
+const errorMessage = computed(() => appStore.errorMessage || charactersStore.errorMessage);
 const currentTab = ref(0); //
+const dbReady = computed(() => appStore.dbReady);
 const headerTitle = computed(() => {
   return ['角色', '主角', '背包', '设置'][currentTab.value] || '角色';
 });
@@ -26,22 +32,18 @@ const headerTitle = computed(() => {
 // onMounted 现在是一个 async 函数，因为它需要执行异步的数据库操作
 onMounted(async () => {
   try {
-    // 关键改动：在组件挂载后，首先初始化数据库服务。
-    // 这会在后台发生，此时用户看到的是加载动画。
-    await databaseService.init();
+    await appStore.initApp();
     console.log('数据库服务已在 Home.vue 中成功初始化。');
 
-    // 数据库准备就绪后，再加载数据。
-    const data = await databaseService.getCharacters();
-    characters.value = data;
+    await charactersStore.loadCharacters();
     console.log('成功从本地 SQLite 数据库加载人物数据。');
 
   } catch (error) {
     console.error('在 Home.vue 中初始化或加载数据失败:', error);
-    errorMessage.value = '应用数据初始化失败，请重启应用。';
+    // 错误消息由 store 管理
   } finally {
     // 无论成功或失败，最后都结束加载状态
-    isLoading.value = false;
+    // 加载状态由 store 计算
   }
 });
 
@@ -59,8 +61,7 @@ const onItemTap = (event: ItemEventData) => {
 // 进入页面时刷新角色列表，以便新增后返回能看到更新
 const reloadCharacters = async () => {
   try {
-    const data = await databaseService.getCharacters();
-    characters.value = data;
+    await charactersStore.reloadCharacters();
   } catch (e) {
     console.error('刷新角色列表失败:', e);
   }
@@ -94,7 +95,7 @@ const openAddCharacter = () => {
         </template>
 
         <template #attributes>
-          <TabsProtagonist />
+          <TabsProtagonist :dbReady="dbReady" />
         </template>
 
         <template #inventory>
