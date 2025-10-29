@@ -3,6 +3,7 @@ import { ref, onMounted, getCurrentInstance, computed } from 'nativescript-vue';
 import { ItemEventData } from '@nativescript/core';
 import CharacterDetail from './CharacterDetail.vue';
 import AppHeader from './AppHeader.vue';
+import MainTabs from './MainTabs.vue';
 import { databaseService } from '../services/data-service'; // 导入本地数据服务
 import { Character } from '../../types/character'; // 导入类型定义
 
@@ -50,18 +51,7 @@ const onItemTap = (event: ItemEventData) => {
   }
 };
 
-// 底栏索引变化时同步到 currentTab（原生 BottomNavigation 事件）
-const onTabChanged = (args: any) => {
-  try {
-    const obj = args?.object as any;
-    const idx = obj?.selectedIndex;
-    if (typeof idx === 'number') {
-      currentTab.value = idx;
-    }
-  } catch (e) {
-    // 安全兜底：保持不抛错
-  }
-};
+// Tab 变更由 MainTabs 子组件通过 emits 更新 currentTab
 </script>
 
 <template>
@@ -69,63 +59,13 @@ const onTabChanged = (args: any) => {
     <Page iosOverflowSafeArea="true" class="page">
       <AppHeader :title="headerTitle" :showBackButton="false" />
 
-      <!-- 使用 TabView，安卓将 tabs 固定在底部，并统一样式 -->
-      <TabView
-        :selectedIndex="currentTab"
-        @selectedIndexChanged="onTabChanged"
-        androidTabsPosition="bottom"
-        tabsBackgroundColor="#ffffff"
-        tabTextColor="#7a7a7a"
-        selectedTabTextColor="#07C160"
-        androidSelectedTabHighlightColor="#07C160"
-      >
-        <!-- Tab 0: 微信 -->
-        <TabViewItem title="角色">
-          <GridLayout rows="*">
-            <ActivityIndicator v-if="isLoading" row="0" busy="true" class="align-middle" />
-            <Label v-else-if="errorMessage" row="0" :text="errorMessage" class="text-center text-red-500 align-middle" textWrap="true" />
-            <ListView v-else row="0" :items="characters" @itemTap="onItemTap">
-              <template #default="{ item }">
-                <GridLayout rows="auto, auto" columns="*" class="p-4 mb-2 bg-gray-100 rounded-lg">
-                  <Label row="0" class="text-lg font-bold">
-                    <FormattedString>
-                      <Span :text="item.core_identity.last_name" />
-                      <Span :text="item.core_identity.first_name" />
-                    </FormattedString>
-                  </Label>
-                  <Label row="1" class="text-gray-600">
-                    <FormattedString>
-                      <Span :text="item.core_identity.age + '岁, '" />
-                      <Span :text="item.core_identity.occupation" />
-                    </FormattedString>
-                  </Label>
-                </GridLayout>
-              </template>
-            </ListView>
-          </GridLayout>
-        </TabViewItem>
-
-        <!-- Tab 1: 属性 -->
-        <TabViewItem title="属性">
-          <StackLayout class="p-4">
-            <Label text="这里是通讯录（待实现）" class="text-center text-gray-600" />
-          </StackLayout>
-        </TabViewItem>
-
-        <!-- Tab 2: 背包 -->
-        <TabViewItem title="背包">
-          <StackLayout class="p-4">
-            <Label text="这里是发现（待实现）" class="text-center text-gray-600" />
-          </StackLayout>
-        </TabViewItem>
-
-        <!-- Tab 3: 设置 -->
-        <TabViewItem title="设置">
-          <StackLayout class="p-4">
-            <Label text="这里是我（待实现）" class="text-center text-gray-600" />
-          </StackLayout>
-        </TabViewItem>
-      </TabView>
+      <MainTabs
+        v-model:currentTab="currentTab"
+        :isLoading="isLoading"
+        :errorMessage="errorMessage"
+        :characters="characters"
+        :onItemTap="onItemTap"
+      />
 
     </Page>
   </Frame>

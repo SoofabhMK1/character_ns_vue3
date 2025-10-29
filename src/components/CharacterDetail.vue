@@ -10,12 +10,14 @@
           <Label :text="character.core_identity.last_name + character.core_identity.first_name" class="text-2xl font-bold text-center" />
           <Label :text="character.core_identity.occupation" class="mt-2 text-center text-gray-600" />
         </StackLayout>
+        <!-- spacer: 强制首个与第二个卡片之间的固定间距 -->
+        <StackLayout height="8" />
 
         <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-2">
           <StackLayout>
             <GridLayout v-for="(attr, index) in metricAttributes" :key="index" columns="auto, *, auto" class="mb-2">
 
-              <Label col="0" :text="attr.label" class="w-28 text-base align-middle" />
+              <Label col="0" :text="attr.label" class="w-14 text-base align-middle" />
 
               <Progress 
                 col="1" 
@@ -35,7 +37,7 @@
 
             <Label text="核心档案" class="text-xl font-bold" />
 
-            <StackLayout class="border-b border-gray-300 my-2" />
+            <StackLayout class="border-b border-gray-300 mt-2 mb-2" />
 
             <GridLayout columns="auto, *, auto, *">
                 <Label col="0" text="年龄:" class="font-bold" />
@@ -60,7 +62,7 @@
 
           <Label text="心理侧写" class="text-xl font-bold" />
 
-          <StackLayout class="border-b border-gray-300 my-2" />
+          <StackLayout class="border-b border-gray-300 mt-2 mb-2" />
 
           <GridLayout columns="auto, *" class="align-middle">
             <Label col="0" text="MBTI 人格:" class="font-bold text-base" />
@@ -116,7 +118,7 @@
         <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-3">
 
         <Label text="体貌特征" class="text-xl font-bold" />
-        <StackLayout class="border-b border-gray-300" />
+        <StackLayout class="border-b border-gray-300 mt-2" />
 
         <StackLayout class="mt-2">
 
@@ -176,6 +178,8 @@
               <Label :text="'声音: ' + character.physical_profile.sensory_details.vocal_profile.speaking_voice" textWrap="true" class="mb-1" />
               <Label :text="'呻吟: ' + character.physical_profile.sensory_details.vocal_profile.moan_style" textWrap="true" />
             </StackLayout>
+
+            <StackLayout height="6" />
 
             <StackLayout class="p-3 bg-white rounded-lg space-y-2">
               <Label text="🍒 胸部" class="text-lg font-bold" />
@@ -355,12 +359,12 @@ const metricAttributes = computed(() => {
   if (!props.character?.metrics) return [];
   
   return [
-    { label: '信任 (Trus)', value: props.character.metrics.trust, color: '#4299e1' },       // 蓝色
-    { label: '欲望 (Lust)', value: props.character.metrics.lust, color: '#e53e3e' },         // 红色
-    { label: '妒忌 (Jeal)', value: props.character.metrics.jealousy, color: '#9f7aea' }, // 紫色
-    { label: '好感 (Affe)', value: props.character.metrics.affection, color: '#ed64a6' }, // 粉色
-    { label: '堕落 (Corr)', value: props.character.metrics.corruption, color: '#718096' }, // 灰色
-    { label: '顺从 (Subm)', value: props.character.metrics.submission, color: '#38b2ac' }  // 青色
+    { label: '信任', value: props.character.metrics.trust, color: '#4299e1' },       // 蓝色
+    { label: '欲望', value: props.character.metrics.lust, color: '#e53e3e' },         // 红色
+    { label: '妒忌', value: props.character.metrics.jealousy, color: '#9f7aea' }, // 紫色
+    { label: '好感', value: props.character.metrics.affection, color: '#ed64a6' }, // 粉色
+    { label: '堕落', value: props.character.metrics.corruption, color: '#718096' }, // 灰色
+    { label: '顺从', value: props.character.metrics.submission, color: '#38b2ac' }  // 青色
   ];
 });
 
@@ -391,11 +395,15 @@ const getWardrobeTitle = (key: string): string => {
 .p-4 {
   padding: 16;
 }
-.space-y-4 > * {
-  margin-bottom: 16;
+/* 统一 space-y-* 规则：给除第一个外的所有直接子元素添加上边距 */
+.space-y-4 > * + * {
+  margin-top: 16;
 }
-.space-y-3 > * {
-  margin-bottom: 12;
+.space-y-3 > * + * {
+  margin-top: 12;
+}
+.space-y-2 > * + * {
+  margin-top: 8;
 }
 .text-2xl {
   font-size: 24;
@@ -417,6 +425,9 @@ const getWardrobeTitle = (key: string): string => {
 }
 .mt-2 {
   margin-top: 8;
+}
+.mt-4 {
+  margin-top: 16;
 }
 .text-gray-600 {
   color: #4b5563;
