@@ -2,6 +2,7 @@
 import { ref, onMounted, getCurrentInstance, computed } from 'nativescript-vue';
 import { ItemEventData } from '@nativescript/core';
 import CharacterDetail from './CharacterDetail.vue';
+import AddCharacter from './AddCharacter.vue';
 import AppHeader from './AppHeader.vue';
 import MainTabs from './MainTabs.vue';
 import TabsCharacters from './TabsCharacters.vue';
@@ -55,13 +56,32 @@ const onItemTap = (event: ItemEventData) => {
   }
 };
 
+// 进入页面时刷新角色列表，以便新增后返回能看到更新
+const reloadCharacters = async () => {
+  try {
+    const data = await databaseService.getCharacters();
+    characters.value = data;
+  } catch (e) {
+    console.error('刷新角色列表失败:', e);
+  }
+};
+
+// 打开新增角色页面
+const openAddCharacter = () => {
+  if (instance && instance.proxy) {
+    instance.proxy.$navigateTo(AddCharacter, {
+      props: {},
+    });
+  }
+};
+
 // Tab 变更由 MainTabs 子组件通过 emits 更新 currentTab
 </script>
 
 <template>
   <Frame>
-    <Page iosOverflowSafeArea="true" class="page">
-      <AppHeader :title="headerTitle" :showBackButton="false" />
+    <Page iosOverflowSafeArea="true" class="page" @navigatedTo="reloadCharacters">
+      <AppHeader :title="headerTitle" :showBackButton="false" :showAddButton="currentTab === 0" @addTap="openAddCharacter" />
 
       <MainTabs v-model:currentTab="currentTab">
         <template #characters>

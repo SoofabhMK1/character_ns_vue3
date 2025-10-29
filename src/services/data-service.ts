@@ -39,7 +39,7 @@ class DatabaseService {
       // 执行我们设计的 CREATE TABLE 语句
       const createTableSql = `
         CREATE TABLE IF NOT EXISTS characters (
-            id INTEGER PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             first_name TEXT NOT NULL,
             last_name TEXT NOT NULL,
             age INTEGER NOT NULL,
@@ -120,6 +120,11 @@ class DatabaseService {
    * @returns {Promise<void>}
    */
   public async saveCharacter(character: Character): Promise<void> {
+      // 如果未提供有效 id，则直接插入（让数据库自增）
+      if (typeof character.id !== 'number' || isNaN(character.id)) {
+          await this.insertCharacter(character);
+          return;
+      }
       const existing = await this.getCharacterById(character.id);
       if (existing) {
           await this.updateCharacter(character);
@@ -142,10 +147,10 @@ class DatabaseService {
 
   private async insertCharacter(character: Character): Promise<void> {
       const sql = `
-          INSERT INTO characters (id, first_name, last_name, age, occupation, core_identity, psychological_profile, physical_profile, sexual_profile, metrics, wellbeing, sexual_skill, body_development) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+          INSERT INTO characters (first_name, last_name, age, occupation, core_identity, psychological_profile, physical_profile, sexual_profile, metrics, wellbeing, sexual_skill, body_development) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `;
-      const params = this.mapCharacterToParams(character);
+      const params = this.mapCharacterToParams(character, false);
       await this.database.execSQL(sql, params);
   }
 
@@ -207,9 +212,6 @@ class DatabaseService {
 
       if (forUpdate) {
           params.push(character.id); // for WHERE id = ?
-      } else {
-          // 对于 INSERT，id 在最前面
-          params.unshift(character.id);
       }
       return params;
   }
