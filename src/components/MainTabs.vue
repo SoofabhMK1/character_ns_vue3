@@ -28,30 +28,30 @@ const onSelectedIndexChanged = (args: any) => {
   >
     <!-- Tab 0: 角色 -->
     <TabViewItem title="角色">
-      <StackLayout>
-        <slot name="characters" />
-      </StackLayout>
+      <GridLayout rows="*">
+        <slot name="characters" row="0" />
+      </GridLayout>
     </TabViewItem>
 
     <!-- Tab 1: 主角 -->
     <TabViewItem title="主角">
-      <StackLayout>
-        <slot name="protagonist" />
-      </StackLayout>
+      <GridLayout rows="*">
+        <slot name="protagonist" row="0" />
+      </GridLayout>
     </TabViewItem>
 
     <!-- Tab 2: 发现 -->
     <TabViewItem title="发现">
-      <StackLayout>
-        <slot name="discover" />
-      </StackLayout>
+      <GridLayout rows="*">
+        <slot name="discover" row="0" />
+      </GridLayout>
     </TabViewItem>
 
     <!-- Tab 3: 设置 -->
     <TabViewItem title="设置">
-      <StackLayout>
-        <slot name="settings" />
-      </StackLayout>
+      <GridLayout rows="*">
+        <slot name="settings" row="0" />
+      </GridLayout>
     </TabViewItem>
   </TabView>
 </template>
