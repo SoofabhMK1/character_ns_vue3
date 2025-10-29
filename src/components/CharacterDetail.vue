@@ -338,7 +338,70 @@
 
       </StackLayout>
 
-        <!-- 还可以继续添加其他卡片... -->
+      <!-- Wellbeing 身心状态 -->
+      <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-2">
+        <Label text="身心状态" class="text-xl font-bold" />
+        <StackLayout class="border-b border-gray-300 mt-2 mb-2" />
+
+        <GridLayout v-for="(attr, index) in wellbeingAttributes" :key="'well-' + index" columns="auto, *, auto" class="mb-2">
+          <Label col="0" :text="attr.label" class="w-24 text-base align-middle" />
+          <Progress col="1" :value="attr.value" :maxValue="attr.max" :color="attr.color" class="align-middle" />
+          <Label col="2" :text="`${attr.value} / ${attr.max}`" class="w-24 text-right text-sm text-gray-600 align-middle" />
+        </GridLayout>
+
+        <GridLayout columns="auto, *" class="mt-2">
+          <Label col="0" text="已婚:" class="font-bold" />
+          <Label col="1" :text="character.wellbeing.is_married ? '是' : '否'" />
+        </GridLayout>
+
+        <GridLayout columns="auto, *" class="mt-2">
+          <Label col="0" text="怀孕:" class="font-bold" />
+          <Label col="1" :text="character.wellbeing.is_pregnant ? '是' : '否'" />
+        </GridLayout>
+
+        <GridLayout v-if="character.wellbeing.is_pregnant" columns="auto, *" class="mt-2">
+          <Label col="0" text="孕周:" class="font-bold" />
+          <Label col="1" :text="character.wellbeing.gestation_weeks + ' 周'" />
+        </GridLayout>
+      </StackLayout>
+
+      <StackLayout height="8" />
+
+      <!-- Sexual Skill 性技巧 -->
+      <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-2">
+        <Label text="性技巧" class="text-xl font-bold" />
+        <StackLayout class="border-b border-gray-300 mt-2 mb-2" />
+
+        <GridLayout v-for="(attr, index) in sexualSkillAttributes" :key="'skill-' + index" columns="auto, *, auto" class="mb-2">
+          <Label col="0" :text="attr.label" class="w-24 text-base align-middle" />
+          <Progress col="1" :value="attr.value" :maxValue="attr.max" :color="attr.color" class="align-middle" />
+          <Label col="2" :text="`${attr.value} / ${attr.max}`" class="w-24 text-right text-sm text-gray-600 align-middle" />
+        </GridLayout>
+      </StackLayout>
+
+      <StackLayout height="8" />
+
+      <!-- Body Development 身体开发 -->
+      <StackLayout class="p-4 bg-gray-100 rounded-lg space-y-2">
+        <Label text="身体开发" class="text-xl font-bold" />
+        <StackLayout class="border-b border-gray-300 mt-2 mb-2" />
+
+        <GridLayout columns="auto, *" class="mt-2">
+          <Label col="0" text="是否处女:" class="font-bold" />
+          <Label col="1" :text="character.body_development.is_virgin ? '是' : '否'" />
+        </GridLayout>
+
+        <GridLayout v-for="(attr, index) in bodyDevelopmentAttributes" :key="'dev-' + index" columns="auto, *, auto" class="mb-2">
+          <Label col="0" :text="attr.label" class="w-24 text-base align-middle" />
+          <Progress col="1" :value="attr.value" :maxValue="attr.max" :color="attr.color" class="align-middle" />
+          <Label col="2" :text="`${attr.value} / ${attr.max}`" class="w-24 text-right text-sm text-gray-600 align-middle" />
+        </GridLayout>
+
+        <WrapLayout class="mt-2">
+          <Label :text="'喷水解锁'" :class="character.body_development.squirting_unlocked ? 'px-2 py-1 m-1 bg-green-500 text-white rounded-full text-sm' : 'px-2 py-1 m-1 bg-gray-300 text-gray-700 rounded-full text-sm'" />
+          <Label :text="'多次高潮解锁'" :class="character.body_development.multiple_orgasm_unlocked ? 'px-2 py-1 m-1 bg-green-500 text-white rounded-full text-sm' : 'px-2 py-1 m-1 bg-gray-300 text-gray-700 rounded-full text-sm'" />
+        </WrapLayout>
+      </StackLayout>
 
       </StackLayout>
     </ScrollView>
@@ -383,6 +446,39 @@ const getWardrobeTitle = (key: string): string => {
   };
   return titles[key] || key;
 };
+
+const wellbeingAttributes = computed(() => {
+  if (!props.character?.wellbeing) return [] as Array<{label: string; value: number; max: number; color: string}>;
+  return [
+    { label: '疲劳', value: props.character.wellbeing.fatigue, max: 100, color: '#718096' },
+    { label: '压力', value: props.character.wellbeing.stress_level, max: 100, color: '#f59e0b' },
+    { label: '身体健康', value: props.character.wellbeing.physical_health, max: 100, color: '#10b981' },
+    { label: '精神稳定', value: props.character.wellbeing.mental_stability, max: 100, color: '#3b82f6' },
+  ];
+});
+
+const sexualSkillAttributes = computed(() => {
+  if (!props.character?.sexual_skill) return [] as Array<{label: string; value: number; max: number; color: string}>;
+  return [
+    { label: '持久力', value: props.character.sexual_skill.endurance, max: 100, color: '#ef4444' },
+    { label: '敏感度', value: props.character.sexual_skill.responsiveness, max: 100, color: '#f472b6' },
+    { label: '口技', value: props.character.sexual_skill.oral_proficiency, max: 100, color: '#8b5cf6' },
+    { label: '手技', value: props.character.sexual_skill.manual_proficiency, max: 100, color: '#22c55e' },
+    { label: '总评', value: props.character.sexual_skill.overall_proficiency, max: 100, color: '#0ea5e9' },
+    { label: '诱惑', value: props.character.sexual_skill.seduction_proficiency, max: 100, color: '#f59e0b' },
+  ];
+});
+
+const bodyDevelopmentAttributes = computed(() => {
+  if (!props.character?.body_development) return [] as Array<{label: string; value: number; max: number; color: string}>;
+  return [
+    { label: '疼痛耐受', value: props.character.body_development.pain_tolerance, max: 10, color: '#6b7280' },
+    { label: '后庭接受', value: props.character.body_development.anal_acceptance, max: 10, color: '#ef4444' },
+    { label: '子宫敏感', value: props.character.body_development.womb_sensitivity, max: 10, color: '#f59e0b' },
+    { label: 'G 点敏感', value: props.character.body_development.g_spot_sensitivity, max: 10, color: '#a78bfa' },
+    { label: '阴蒂敏感', value: props.character.body_development.clitoris_sensitivity, max: 10, color: '#f472b6' },
+  ];
+});
 </script>
 
 <style>
