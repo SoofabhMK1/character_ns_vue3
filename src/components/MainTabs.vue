@@ -36,9 +36,9 @@ const onSelectedIndexChanged = (args: any) => {
       <slot name="attributes" />
     </TabViewItem>
 
-    <!-- Tab 2: 背包 -->
-    <TabViewItem title="背包">
-      <slot name="inventory" />
+    <!-- Tab 2: 发现 -->
+    <TabViewItem title="发现">
+      <slot name="discover" />
     </TabViewItem>
 
     <!-- Tab 3: 设置 -->

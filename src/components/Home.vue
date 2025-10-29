@@ -7,7 +7,7 @@ import AppHeader from './AppHeader.vue';
 import MainTabs from './MainTabs.vue';
 import TabsCharacters from './TabsCharacters.vue';
 import TabsProtagonist from './TabsProtagonist.vue';
-import TabsInventory from './TabsInventory.vue';
+import TabsDiscover from './TabsDiscover.vue';
 import TabsSettings from './TabsSettings.vue';
 import { databaseService } from '../services/data-service'; // 导入本地数据服务
 import { useAppStore } from '../stores/app';
@@ -26,7 +26,7 @@ const errorMessage = computed(() => appStore.errorMessage || charactersStore.err
 const currentTab = ref(0); //
 const dbReady = computed(() => appStore.dbReady);
 const headerTitle = computed(() => {
-  return ['角色', '主角', '背包', '设置'][currentTab.value] || '角色';
+  return ['角色', '主角', '发现', '设置'][currentTab.value] || '角色';
 });
 
 // onMounted 现在是一个 async 函数，因为它需要执行异步的数据库操作
@@ -98,8 +98,8 @@ const openAddCharacter = () => {
           <TabsProtagonist :dbReady="dbReady" />
         </template>
 
-        <template #inventory>
-          <TabsInventory />
+        <template #discover>
+          <TabsDiscover />
         </template>
 
         <template #settings>
