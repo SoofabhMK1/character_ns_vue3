@@ -1,6 +1,8 @@
 import { knownFolders, File } from '@nativescript/core';
+import CryptoJS from 'crypto-js';
 import { Character } from '../../types/character'; // 引入我们之前定义的模型
 import type { Protagonist } from '../../types/protagonist';
+import type { ApiSetting } from '../../types/api-setting';
 const Sqlite = require('nativescript-sqlite'); // 引入 sqlite 插件
 
 /**
@@ -12,6 +14,7 @@ class DatabaseService {
   private static instance: DatabaseService;
   private database: any; // 用于存储数据库连接实例
   private initPromise: Promise<void> | null = null; // 防止并发初始化导致重复日志
+  private static readonly SECRET_KEY = 'ns-app-secret-key';
 
   // 构造函数设为私有，防止外部通过 new() 创建新实例
   private constructor() {}
@@ -73,6 +76,37 @@ class DatabaseService {
           );`;
         await this.database.execSQL(createProtagonistSql);
         console.log('\'protagonist\' 表已准备就绪');
+
+        // 建 api_settings 表
+        const createApiSettingsSql = `
+          CREATE TABLE IF NOT EXISTS api_settings (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              platform TEXT NOT NULL,
+              base_url TEXT NOT NULL,
+              api_key TEXT NOT NULL,
+              model TEXT NOT NULL,
+              created_at TEXT,
+              updated_at TEXT
+          );`;
+        await this.database.execSQL(createApiSettingsSql);
+        console.log('\'api_settings\' 表已准备就绪');
+
+        // 确保唯一索引（名称唯一），若已存在则忽略错误
+        try {
+          await this.database.execSQL(`CREATE UNIQUE INDEX IF NOT EXISTS idx_api_settings_name ON api_settings(name);`);
+          console.log('为 api_settings.name 创建唯一索引');
+        } catch (e) {
+          console.warn('创建唯一索引失败（可能已存在）:', e);
+        }
+
+        // 兼容升级：添加 is_default 列（如已存在则忽略错误）
+        try {
+          await this.database.execSQL(`ALTER TABLE api_settings ADD COLUMN is_default INTEGER DEFAULT 0;`);
+          console.log('为 api_settings 添加 is_default 列');
+        } catch (e) {
+          // 如果列已存在会报错，忽略即可
+        }
 
         // 植入初始数据（仅当为空）
         await this.seedInitialData();
@@ -254,6 +288,79 @@ class DatabaseService {
     }
   }
 
+  // ===== API Settings CRUD =====
+  public async getApiSettings(): Promise<ApiSetting[]> {
+    const rows = await this.database.all('SELECT * FROM api_settings');
+    return rows.map((row: any[]) => this.mapRowToApiSetting(row));
+  }
+
+  public async getApiSettingById(id: number): Promise<ApiSetting | null> {
+    const row = await this.database.get('SELECT * FROM api_settings WHERE id = ?', [id]);
+    if (!row) return null;
+    return this.mapRowToApiSetting(row);
+  }
+
+  public async saveApiSetting(setting: ApiSetting): Promise<void> {
+    if (typeof setting.id !== 'number' || isNaN(setting.id)) {
+      await this.insertApiSetting(setting);
+      return;
+    }
+    const existing = await this.getApiSettingById(setting.id);
+    if (existing) {
+      await this.updateApiSetting(setting);
+    } else {
+      await this.insertApiSetting(setting);
+    }
+  }
+
+  public async insertApiSetting(setting: ApiSetting): Promise<void> {
+    const now = new Date().toISOString();
+    const sql = `
+      INSERT INTO api_settings (name, platform, base_url, api_key, model, created_at, updated_at, is_default)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    `;
+    const params = [
+      setting.name,
+      setting.platform,
+      setting.base_url,
+      this.encrypt(setting.api_key),
+      setting.model,
+      setting.created_at || now,
+      setting.updated_at || now,
+      setting.is_default ? 1 : 0,
+    ];
+    await this.database.execSQL(sql, params);
+  }
+
+  public async updateApiSetting(setting: ApiSetting): Promise<void> {
+    const now = new Date().toISOString();
+    const sql = `
+      UPDATE api_settings SET name = ?, platform = ?, base_url = ?, api_key = ?, model = ?, updated_at = ?, is_default = ?
+      WHERE id = ?;
+    `;
+    const params = [
+      setting.name,
+      setting.platform,
+      setting.base_url,
+      this.encrypt(setting.api_key),
+      setting.model,
+      setting.updated_at || now,
+      setting.is_default ? 1 : 0,
+      setting.id,
+    ];
+    await this.database.execSQL(sql, params);
+  }
+
+  public async deleteApiSetting(id: number): Promise<void> {
+    const sql = `DELETE FROM api_settings WHERE id = ?;`;
+    await this.database.execSQL(sql, [id]);
+  }
+
+  public async setDefaultApiSetting(id: number): Promise<void> {
+    await this.database.execSQL(`UPDATE api_settings SET is_default = 0;`);
+    await this.database.execSQL(`UPDATE api_settings SET is_default = 1 WHERE id = ?;`, [id]);
+  }
+
 
   // --- 私有辅助方法 ---
 
@@ -325,6 +432,42 @@ class DatabaseService {
       base_attributes: JSON.parse(row[1]),
       basic_description: JSON.parse(row[2]),
     };
+  }
+
+  private mapRowToApiSetting(row: any[]): ApiSetting {
+    // SELECT * 顺序: id, name, platform, base_url, api_key, model, created_at, updated_at, is_default
+    return {
+      id: row[0],
+      name: row[1],
+      platform: row[2],
+      base_url: row[3],
+      api_key: this.decryptSafe(row[4]),
+      model: row[5],
+      created_at: row[6],
+      updated_at: row[7],
+      is_default: !!row[8],
+    };
+  }
+
+  private encrypt(plain: string): string {
+    try {
+      return CryptoJS.AES.encrypt(plain || '', DatabaseService.SECRET_KEY).toString();
+    } catch (e) {
+      console.warn('api_key 加密失败，降级为原文:', e);
+      return plain || '';
+    }
+  }
+
+  private decryptSafe(cipher: string): string {
+    try {
+      const bytes = CryptoJS.AES.decrypt(cipher || '', DatabaseService.SECRET_KEY);
+      const text = bytes.toString(CryptoJS.enc.Utf8);
+      // 如果不是有效的 UTF8，返回原文（可能是历史未加密数据）
+      return text || cipher || '';
+    } catch (e) {
+      // 历史数据或者非加密字符串
+      return cipher || '';
+    }
   }
 
   /**
