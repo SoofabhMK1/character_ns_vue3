@@ -1,0 +1,358 @@
+{
+  "characters": [
+{	"id": 1,
+	"core_identity":{
+	  "age": 32,
+	  "nickname": "沐沐",
+	  "birthdate": "1992-10-10",
+	  "last_name": "庄",
+	  "first_name": "沫",
+	  "occupation": "消费健康品公司市场总监",
+	  "gender_identity": "女",
+	  "protagonist_relationship": "项目对接的合作方市场总监"
+	},
+	"psychological_profile":{
+	  "flaws": [
+		"控制欲有点强",
+		"对自己和他人要求高",
+		"嘴硬心软",
+		"有点记仇"
+	  ],
+	  "secrets": [
+		"正在暗中收集证据，准备扳倒一位长期打压自己、并有违规行为的副总裁。",
+		"尽管外表强势，但非常害怕失败，每晚都需要复盘当天所有对话以确保没有漏洞。",
+		"私下里是古典音乐发烧友，用以排解巨大的工作压力。"
+	  ],
+	  "virtues": [
+		"执行力强",
+		"有原则",
+		"可靠守时",
+		"内心强大"
+	  ],
+	  "mbti_type": "ENTJ"
+	},
+	"physical_profile":{
+	  "general": {
+		"body_type": "匀称修长",
+		"eye_color": "深褐色",
+		"height_cm": 168,
+		"skin_tone": "冷白皮",
+		"weight_kg": 54.5,
+		"hair_color": "深棕色",
+		"hair_style": "及肩直发，打理得一丝不苟",
+		"distinguishing_features": [
+		  "手指修长干净",
+		  "不经意间会歪头思考",
+		  "眼神锐利而专注",
+		  "脖颈线条好看"
+		]
+	  },
+	  "sexual_anatomy": {
+		"anus": {
+		  "color": "浅褐色",
+		  "tightness": 8,
+		  "appearance_tags": [
+			"紧致",
+			"无瑕"
+		  ]
+		},
+		"feet": {
+		  "shape": "埃及脚",
+		  "arch_type": "正常足弓",
+		  "shoe_size_eu": 37,
+		  "natural_scent": "几乎无味，带有清爽的润肤露香气",
+		  "skin_condition": "保养良好，足跟光滑"
+		},
+		"vagina": {
+		  "labia_color": "粉嫩",
+		  "labia_shape": "一线型",
+		  "baseline_tightness": 7,
+		  "baseline_lubrication": 6,
+		  "clitoris_sensitivity": 8
+		},
+		"breasts": {
+		  "shape": "水滴形",
+		  "cup_size": "C",
+		  "firmness": 7,
+		  "areola_size": "中等",
+		  "nipple_size": "中等",
+		  "nipple_type": "突出型",
+		  "nipple_color": "淡粉褐色"
+		},
+		"buttocks_shape": "圆形",
+		"waist_hip_ratio": 0.72,
+		"pubic_hair_style": "精心修剪的比基尼式"
+	  },
+	  "wardrobe_style": {
+		"sleepwear": [
+		  "简约的真丝吊带睡裙",
+		  "分体式丝绸睡衣"
+		],
+		"daily_wear": [
+		  "高品质真丝衬衫",
+		  "修身西裤",
+		  "品牌风衣",
+		  "尖头高跟鞋"
+		],
+		"loungewear": [
+		  "舒适的羊绒套装",
+		  "纯棉长袖T恤"
+		],
+		"dating_wear": [
+		  "有设计感的连衣裙",
+		  "质感好的小黑裙",
+		  "羊绒大衣"
+		],
+		"underwear_preference": [
+		  "成套的蕾丝内衣",
+		  "无痕T-back",
+		  "黑色系"
+		]
+	  },
+	  "sensory_details": {
+		"natural_scent": "淡淡的木质调香水混合皮肤的洁净气息",
+		"vocal_profile": {
+		  "moan_style": "压抑的、从喉咙深处发出的低吟，失控时会变成急促的喘息和命令式的短句",
+		  "speaking_voice": "清晰、语速偏快、有条理，音色是略带磁性的中音"
+		}
+	  }
+	},
+	"sexual_profile":{
+	  "turn_ons": [
+		"有条理的逻辑思辨",
+		"在专业领域展现出的自信",
+		"干净的着装和细节",
+		"被有力地掌控",
+		"精准的、带有目的性的抚摸"
+	  ],
+	  "turn_offs": [
+		"优柔寡断",
+		"逻辑混乱",
+		"不注重个人卫生",
+		"无意义的闲聊",
+		"被质疑专业能力"
+	  ],
+	  "orientation": "异性恋",
+	  "kinks_and_fetishes": {
+		"core": [
+		  "受虐",
+		  "疼痛崇拜",
+		  "职业装恋物"
+		],
+		"secondary": [
+		  "言语羞辱"
+		]
+	  },
+	  "communication_style": "直接、明确，喜欢指令式的沟通",
+	  "aftercare_preference": "安静的拥抱，不需要太多言语，或者一杯威士忌后各自独处。"
+	},
+	"metrics":{
+	  "lust": 5,
+	  "trust": 15,
+	  "jealousy": 10,
+	  "affection": 15,
+	  "corruption": 0,
+	  "submission": 0
+	},
+	"wellbeing":{
+	  "fatigue": 25,
+	  "is_married": false,
+	  "is_pregnant": false,
+	  "stress_level": 45,
+	  "gestation_weeks": 0,
+	  "physical_health": 90,
+	  "mental_stability": 70
+	},
+	"sexual_skill":{
+	  "endurance": 45,
+	  "responsiveness": 40,
+	  "oral_proficiency": 30,
+	  "manual_proficiency": 25,
+	  "overall_proficiency": 30,
+	  "seduction_proficiency": 25
+	},
+	"body_development":{
+	  "is_virgin": false,
+	  "pain_tolerance": 20,
+	  "anal_acceptance": 0,
+	  "womb_sensitivity": 0,
+	  "g_spot_sensitivity": 0,
+	  "squirting_unlocked": false,
+	  "clitoris_sensitivity": 0,
+	  "multiple_orgasm_unlocked": false
+	}
+},
+{
+	"id": 2,
+	"core_identity":{
+	  "age": 34,
+	  "nickname": "莱莱",
+	  "birthdate": "1990-07-22",
+	  "last_name": "姜",
+	  "first_name": "莱",
+	  "occupation": "医疗集团人事部经理",
+	  "gender_identity": "女",
+	  "protagonist_relationship": "新同事"
+	},
+	"psychological_profile":{
+	  "flaws": [
+		"对自己亲近的人嘴硬心软",
+		"有轻微强迫症 (办公桌必须整洁)",
+		"不善于表达脆弱"
+	  ],
+	  "secrets": [
+		"刚和谈了八年的男友分手，正在重新适应单身生活，对未来感到迷茫但从不外露。",
+		"私下里喜欢看老套的爱情喜剧，并且会因为剧情而偷偷哭泣。",
+		"虽然外表强势，但内心深处渴望能有一个可以完全信赖并让他掌控一切的伴侣。"
+	  ],
+	  "virtues": [
+		"有责任感",
+		"可靠守时",
+		"情绪稳定"
+	  ],
+	  "mbti_type": "ISTJ"
+	},
+	"physical_profile":{
+	  "general": {
+		"body_type": "匀称",
+		"eye_color": "深褐色",
+		"height_cm": 168,
+		"skin_tone": "冷白皮",
+		"weight_kg": 55,
+		"hair_color": "深棕色",
+		"hair_style": "及肩直发",
+		"distinguishing_features": [
+		  "走路姿态很好",
+		  "手指修长干净",
+		  "锁骨线条明显"
+		]
+	  },
+	  "sexual_anatomy": {
+		"anus": {
+		  "color": "浅棕色",
+		  "tightness": 8,
+		  "appearance_tags": [
+			"干净",
+			"紧致"
+		  ]
+		},
+		"feet": {
+		  "shape": "希腊脚",
+		  "arch_type": "正常足弓",
+		  "shoe_size_eu": 38,
+		  "natural_scent": "几乎没有气味，有淡淡的润肤露香",
+		  "skin_condition": "保养得很好，干净无瑕疵"
+		},
+		"vagina": {
+		  "labia_color": "浅褐色",
+		  "labia_shape": "内阴唇被大阴唇包裹",
+		  "baseline_tightness": 6,
+		  "baseline_lubrication": 5,
+		  "clitoris_sensitivity": 7
+		},
+		"breasts": {
+		  "shape": "水滴形",
+		  "cup_size": "C",
+		  "firmness": 6,
+		  "areola_size": "中等",
+		  "nipple_size": "正常",
+		  "nipple_type": "略微突出",
+		  "nipple_color": "淡粉褐色"
+		},
+		"buttocks_shape": "圆形",
+		"waist_hip_ratio": 0.72,
+		"pubic_hair_style": "精心修剪的比基尼线"
+	  },
+	  "wardrobe_style": {
+		"sleepwear": [
+		  "丝质吊带睡裙",
+		  "长款衬衫式睡衣"
+		],
+		"daily_wear": [
+		  "商务休闲风",
+		  "真丝衬衫",
+		  "高腰西装裤",
+		  "铅笔裙"
+		],
+		"loungewear": [
+		  "质感好的纯棉家居服套装",
+		  "莫代尔长袖长裤"
+		],
+		"dating_wear": [
+		  "有设计感的连衣裙",
+		  "简约的针织衫搭配半身裙"
+		],
+		"underwear_preference": [
+		  "成套",
+		  "无痕",
+		  "纯色系 (黑/白/裸色)"
+		]
+	  },
+	  "sensory_details": {
+		"natural_scent": "淡淡的木质调香水混合着纸张的味道",
+		"vocal_profile": {
+		  "moan_style": "压抑的、试图忍耐但最终失控的低吟与喘息",
+		  "speaking_voice": "清晰、语速适中、有条理，略带一点距离感"
+		}
+	  }
+	},
+	"sexual_profile":{
+	  "turn_ons": [
+		"对方身上干净的皂香或木质香",
+		"有条理、守信用的行为",
+		"能看穿她的逞强并给予沉默的陪伴",
+		"在私密时刻被强势但温柔地掌控",
+		"修长干净的手指"
+	  ],
+	  "turn_offs": [
+		"不守时、邋遢",
+		"说话夸张、吹牛",
+		"公开场合的过度亲密行为",
+		"不尊重规则和私人界限"
+	  ],
+	  "orientation": "异性恋",
+	  "kinks_and_fetishes": {
+		"core": ["轻度束缚"],
+		"secondary": ["疼痛崇拜"]
+	  },
+	  "communication_style": "间接的，倾向于用行动和眼神表达，不习惯直接索取。",
+	  "aftercare_preference": "长时间的拥抱，安静地依偎在一起，不需要太多语言，一杯温水。"
+	},
+	"metrics":{
+	  "lust": 5,
+	  "trust": 25,
+	  "jealousy": 10,
+	  "affection": 20,
+	  "corruption": 0,
+	  "submission": 0
+	},
+	"wellbeing":{
+	  "fatigue": 60,
+	  "is_married": false,
+	  "is_pregnant": false,
+	  "stress_level": 75,
+	  "gestation_weeks": 0,
+	  "physical_health": 85,
+	  "mental_stability": 40
+	},
+	"sexual_skill":{
+	  "endurance": 35,
+	  "responsiveness": 30,
+	  "oral_proficiency": 15,
+	  "manual_proficiency": 15,
+	  "overall_proficiency": 15,
+	  "seduction_proficiency": 5
+	},
+	"body_development":{
+	  "is_virgin": false,
+	  "pain_tolerance": 2,
+	  "anal_acceptance": 0,
+	  "womb_sensitivity": 0,
+	  "g_spot_sensitivity": 0,
+	  "squirting_unlocked": false,
+	  "clitoris_sensitivity": 0,
+	  "multiple_orgasm_unlocked": false
+	}
+}
+  ]
+}

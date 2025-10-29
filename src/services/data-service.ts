@@ -1,0 +1,219 @@
+import { knownFolders, File } from '@nativescript/core';
+import { Character } from '../../types/character'; // 引入我们之前定义的模型
+const Sqlite = require('nativescript-sqlite'); // 引入 sqlite 插件
+
+/**
+ * 这是一个数据服务类，采用单例模式。
+ * 这意味着在整个应用中，我们只会创建这一个类的实例，
+ * 从而保证我们始终通过同一个连接操作数据库。
+ */
+class DatabaseService {
+  private static instance: DatabaseService;
+  private database: any; // 用于存储数据库连接实例
+
+  // 构造函数设为私有，防止外部通过 new() 创建新实例
+  private constructor() {}
+
+  // 获取单例实例的静态方法
+  public static getInstance(): DatabaseService {
+    if (!DatabaseService.instance) {
+      DatabaseService.instance = new DatabaseService();
+    }
+    return DatabaseService.instance;
+  }
+
+  /**
+   * 初始化数据库。
+   * 这个方法会打开数据库连接，创建表（如果不存在），并从 db.json 植入初始数据。
+   */
+  public async init(): Promise<void> {
+    if (this.database) {
+      return; // 如果已经初始化，则直接返回
+    }
+
+    try {
+      // 打开（或创建）一个名为 'app.db' 的数据库文件
+      this.database = await new Sqlite('app.db');
+      console.log('数据库连接已打开');
+
+      // 执行我们设计的 CREATE TABLE 语句
+      const createTableSql = `
+        CREATE TABLE IF NOT EXISTS characters (
+            id INTEGER PRIMARY KEY,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            age INTEGER NOT NULL,
+            occupation TEXT,
+            core_identity TEXT,
+            psychological_profile TEXT,
+            physical_profile TEXT,
+            sexual_profile TEXT,
+            metrics TEXT,
+            wellbeing TEXT,
+            sexual_skill TEXT,
+            body_development TEXT
+        );`;
+      await this.database.execSQL(createTableSql);
+      console.log('\'characters\' 表已准备就绪');
+
+      // 检查表中是否有数据，如果没有，则从 db.json 植入
+      await this.seedInitialData();
+
+    } catch (error) {
+      console.error('数据库初始化失败:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * 植入初始数据 (仅当数据库为空时)
+   */
+  private async seedInitialData(): Promise<void> {
+    const countResult = await this.database.get('SELECT COUNT(*) as count FROM characters');
+    if (countResult && countResult[0] > 0) {
+        console.log('数据库已有数据，跳过植入。');
+        return;
+    }
+
+    console.log('数据库为空，开始从 db.json 植入初始数据...');
+    try {
+        const path = knownFolders.currentApp().path + '/assets/db.json';
+        const file = File.fromPath(path);
+        const content = await file.readText();
+        const data = JSON.parse(content);
+        const charactersToSeed: Character[] = data.characters;
+        
+        for (const character of charactersToSeed) {
+            await this.insertCharacter(character);
+        }
+        console.log(`成功植入 ${charactersToSeed.length} 条人物数据。`);
+    } catch(error) {
+        console.error('从 db.json 植入数据失败:', error);
+    }
+  }
+  
+  // --- CRUD 方法 ---
+
+  /**
+   * 获取所有人物
+   * @returns {Promise<Character[]>}
+   */
+  public async getCharacters(): Promise<Character[]> {
+    const rows = await this.database.all('SELECT * FROM characters');
+    // 将数据库行映射回我们定义的 Character 对象
+    return rows.map((row: any[]) => this.mapRowToCharacter(row));
+  }
+  
+  /**
+   * 根据 ID 获取单个人物
+   * @param {number} id
+   * @returns {Promise<Character | null>}
+   */
+  public async getCharacterById(id: number): Promise<Character | null> {
+    const row = await this.database.get('SELECT * FROM characters WHERE id = ?', [id]);
+    return row ? this.mapRowToCharacter(row) : null;
+  }
+
+  /**
+   * 保存一个人物（可以是新增或更新）
+   * @param {Character} character
+   * @returns {Promise<void>}
+   */
+  public async saveCharacter(character: Character): Promise<void> {
+      const existing = await this.getCharacterById(character.id);
+      if (existing) {
+          await this.updateCharacter(character);
+      } else {
+          await this.insertCharacter(character);
+      }
+  }
+
+  /**
+   * 删除一个人物
+   * @param {number} id
+   * @returns {Promise<void>}
+   */
+  public async deleteCharacter(id: number): Promise<void> {
+      await this.database.execSQL('DELETE FROM characters WHERE id = ?', [id]);
+  }
+
+
+  // --- 私有辅助方法 ---
+
+  private async insertCharacter(character: Character): Promise<void> {
+      const sql = `
+          INSERT INTO characters (id, first_name, last_name, age, occupation, core_identity, psychological_profile, physical_profile, sexual_profile, metrics, wellbeing, sexual_skill, body_development) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      `;
+      const params = this.mapCharacterToParams(character);
+      await this.database.execSQL(sql, params);
+  }
+
+  private async updateCharacter(character: Character): Promise<void> {
+      const sql = `
+          UPDATE characters SET first_name = ?, last_name = ?, age = ?, occupation = ?, core_identity = ?, psychological_profile = ?, physical_profile = ?, sexual_profile = ?, metrics = ?, wellbeing = ?, sexual_skill = ?, body_development = ?
+          WHERE id = ?;
+      `;
+      // 注意：UPDATE 语句的参数顺序不同，id 在最后
+      const params = this.mapCharacterToParams(character, true);
+      await this.database.execSQL(sql, params);
+  }
+  
+  /**
+   * 辅助函数：将数据库的一行数据（包含 JSON 字符串）转换成一个完整的 Character 对象
+   * @param row - 数据库查询结果的一行
+   */
+  private mapRowToCharacter(row: any[]): Character {
+    // 数据库返回的 row 是一个数组，顺序与 CREATE TABLE 中的列顺序一致
+    return {
+      id: row[0],
+      // 核心字段直接赋值
+      // first_name: row[1],
+      // last_name: row[2],
+      // age: row[3],
+      // occupation: row[4],
+      // 将存储为 TEXT 的 JSON 字符串解析回对象
+      core_identity: JSON.parse(row[5]),
+      psychological_profile: JSON.parse(row[6]),
+      physical_profile: JSON.parse(row[7]),
+      sexual_profile: JSON.parse(row[8]),
+      metrics: JSON.parse(row[9]),
+      wellbeing: JSON.parse(row[10]),
+      sexual_skill: JSON.parse(row[11]),
+      body_development: JSON.parse(row[12]),
+    };
+  }
+
+  /**
+   * 辅助函数：将一个 Character 对象转换成用于 SQL 参数绑定的数组
+   * @param character - 要转换的人物对象
+   * @param forUpdate - 如果是为 UPDATE 语句准备，则将 id 放到数组末尾
+   */
+  private mapCharacterToParams(character: Character, forUpdate = false): any[] {
+      const params = [
+          character.core_identity.first_name,
+          character.core_identity.last_name,
+          character.core_identity.age,
+          character.core_identity.occupation,
+          JSON.stringify(character.core_identity),
+          JSON.stringify(character.psychological_profile),
+          JSON.stringify(character.physical_profile),
+          JSON.stringify(character.sexual_profile),
+          JSON.stringify(character.metrics),
+          JSON.stringify(character.wellbeing),
+          JSON.stringify(character.sexual_skill),
+          JSON.stringify(character.body_development)
+      ];
+
+      if (forUpdate) {
+          params.push(character.id); // for WHERE id = ?
+      } else {
+          // 对于 INSERT，id 在最前面
+          params.unshift(character.id);
+      }
+      return params;
+  }
+}
+
+// 导出服务的单例，供整个应用使用
+export const databaseService = DatabaseService.getInstance();
