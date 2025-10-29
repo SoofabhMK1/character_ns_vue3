@@ -2,18 +2,30 @@ import { defineStore } from 'pinia';
 import { databaseService } from '../services/data-service';
 import type { Protagonist } from '../../types/protagonist';
 
+type ProtagonistState = {
+  protagonist: Protagonist | null;
+  isLoading: boolean;
+  errorMessage: string;
+  loadedOnce: boolean;
+};
+
 export const useProtagonistStore = defineStore('protagonist', {
-  state: () => ({
-    protagonist: null as Protagonist | null,
-    isLoading: false as boolean,
-    errorMessage: '' as string,
-    loadedOnce: false as boolean,
+  state: (): ProtagonistState => ({
+    protagonist: null,
+    isLoading: false,
+    errorMessage: '',
+    loadedOnce: false,
   }),
   actions: {
-    async loadProtagonist() {
+    async loadProtagonist(): Promise<void> {
       this.isLoading = true;
+      this.errorMessage = '';
       try {
         const p = await databaseService.getProtagonist();
+        if (!p) {
+          this.errorMessage = '未获取到主角数据';
+          return;
+        }
         this.protagonist = p;
         this.loadedOnce = true;
       } catch (e) {
@@ -23,11 +35,16 @@ export const useProtagonistStore = defineStore('protagonist', {
         this.isLoading = false;
       }
     },
-    async saveProtagonist(p: Protagonist) {
-      await databaseService.saveProtagonist(p);
-      this.protagonist = p;
+    async saveProtagonist(p: Protagonist): Promise<void> {
+      try {
+        await databaseService.saveProtagonist(p);
+        this.protagonist = p;
+      } catch (e) {
+        console.error('保存主角信息失败:', e);
+        this.errorMessage = '保存主角信息失败';
+      }
     },
-    clearError() {
+    clearError(): void {
       this.errorMessage = '';
     }
   },

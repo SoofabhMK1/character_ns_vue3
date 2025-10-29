@@ -9,7 +9,6 @@ import TabsCharacters from './TabsCharacters.vue';
 import TabsProtagonist from './TabsProtagonist.vue';
 import TabsDiscover from './TabsDiscover.vue';
 import TabsSettings from './TabsSettings.vue';
-import { databaseService } from '../services/data-service'; // 导入本地数据服务
 import { useAppStore } from '../stores/app';
 import { useCharactersStore } from '../stores/characters';
 import { Character } from '../../types/character'; // 导入类型定义
@@ -94,8 +93,8 @@ const openAddCharacter = () => {
           />
         </template>
 
-        <template #attributes>
-          <TabsProtagonist :dbReady="dbReady" />
+        <template #protagonist>
+          <TabsProtagonist />
         </template>
 
         <template #discover>
