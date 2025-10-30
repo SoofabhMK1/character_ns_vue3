@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ItemEventData } from '@nativescript/core';
 import type { Character } from '../../types/character';
 
 defineProps<{
@@ -8,10 +7,19 @@ defineProps<{
   characters: Character[];
 }>();
 
-const emit = defineEmits<{ (e: 'itemTap', event: ItemEventData): void }>();
+const emit = defineEmits<{ (e: 'moreTap', character: Character): void }>();
 
-const onItemTap = (event: ItemEventData) => {
-  emit('itemTap', event);
+const onMoreTap = (character: Character) => {
+  emit('moreTap', character);
+};
+
+const onChatTap = (character: Character) => {
+  // 暂不实现跳转，保留点击占位
+  try {
+    console.log('Chat icon tapped for', character.core_identity.last_name + character.core_identity.first_name);
+  } catch {
+    // no-op
+  }
 };
 </script>
 
@@ -19,15 +27,24 @@ const onItemTap = (event: ItemEventData) => {
   <GridLayout rows="*">
     <ActivityIndicator v-if="isLoading" row="0" busy="true" class="align-middle" />
     <Label v-else-if="errorMessage" row="0" :text="errorMessage" class="text-center text-red-500 align-middle" textWrap="true" />
-    <ListView v-else row="0" :items="characters" @itemTap="onItemTap">
+    <ListView v-else row="0" :items="characters">
       <template #default="{ item }">
         <GridLayout rows="auto, auto" columns="*" class="p-4 mb-2 bg-gray-100 rounded-lg">
-          <Label row="0" class="text-lg font-bold">
-            <FormattedString>
-              <Span :text="item.core_identity.last_name" />
-              <Span :text="item.core_identity.first_name" />
-            </FormattedString>
-          </Label>
+          <!-- 顶部：名字 + 右侧图标 -->
+          <GridLayout row="0" columns="*, auto, auto" class="items-center">
+            <Label col="0" class="text-lg font-bold">
+              <FormattedString>
+                <Span :text="item.core_identity.last_name" />
+                <Span :text="item.core_identity.first_name" />
+              </FormattedString>
+            </Label>
+            <!-- 对话图标（占位，无跳转） -->
+            <Label col="1" text="💬" class="text-lg ml-2" @tap="onChatTap(item)" />
+            <!-- 更多（省略号）图标，点击进入详情 -->
+            <Label col="2" text="⋯" class="text-lg ml-8 mr-4" @tap="onMoreTap(item)" />
+          </GridLayout>
+
+          <!-- 次级信息：年龄、职业 -->
           <Label row="1" class="text-gray-600">
             <FormattedString>
               <Span :text="item.core_identity.age + '岁, '" />

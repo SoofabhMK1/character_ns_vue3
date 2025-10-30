@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import { ref, onMounted, getCurrentInstance, computed } from 'nativescript-vue';
-import { ItemEventData } from '@nativescript/core';
 import CharacterDetail from './CharacterDetail.vue';
 import AddCharacter from './AddCharacter.vue';
 import AppHeader from './AppHeader.vue';
@@ -46,13 +45,10 @@ onMounted(async () => {
   }
 });
 
-const onItemTap = (event: ItemEventData) => {
+const onMoreTap = (character: Character) => {
   if (instance && instance.proxy) {
-    const character = characters.value[event.index];
     instance.proxy.$navigateTo(CharacterDetail, {
-      props: {
-        character: character
-      }
+      props: { character }
     });
   }
 };
@@ -89,7 +85,7 @@ const openAddCharacter = () => {
             :isLoading="isLoading"
             :errorMessage="errorMessage"
             :characters="characters"
-            @itemTap="onItemTap"
+            @moreTap="onMoreTap"
           />
         </template>
 
