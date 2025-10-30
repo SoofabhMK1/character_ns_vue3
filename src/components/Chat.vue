@@ -59,14 +59,14 @@ const onSend = async () => {
 
 onMounted(async () => {
   if (appStore.dbReady) {
-    await chatSettingsStore.init();
+    await chatSettingsStore.initForCharacter(props.character.id);
     await loadMessages();
   } else {
     const stop = watch(
       () => appStore.dbReady,
       async (ready) => {
         if (ready) {
-          await chatSettingsStore.init();
+          await chatSettingsStore.initForCharacter(props.character.id);
           await loadMessages();
           stop();
         }

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, getCurrentInstance } from 'nativescript-vue';
 import { useChatSettingsStore } from '../../stores/chat-settings';
+import * as charactersRepo from '../../repositories/characters';
 import { useChatStore } from '../../stores/chat';
 import { confirm } from '@nativescript/core';
 
@@ -14,12 +15,23 @@ const streamingEnabled = ref<boolean>(store.streamingEnabled);
 const debugMode = ref<boolean>(store.debugMode);
 const isLoading = ref(false);
 const errorMessage = ref('');
+const characterName = ref('');
 
 onMounted(async () => {
   try {
     isLoading.value = true;
     errorMessage.value = '';
-    await store.init();
+    if (typeof props.characterId === 'number') {
+      await store.initForCharacter(props.characterId);
+      try {
+        const c = await charactersRepo.getCharacterById(props.characterId);
+        if (c) {
+          characterName.value = `${c.core_identity.last_name}${c.core_identity.first_name}`;
+        }
+      } catch {}
+    } else {
+      throw new Error('缺少角色上下文');
+    }
     systemPrompt.value = store.systemPrompt;
     streamingEnabled.value = store.streamingEnabled;
     debugMode.value = store.debugMode;
@@ -62,6 +74,7 @@ const cancel = () => {
         <Label v-else-if="errorMessage" :text="errorMessage" class="text-center text-red-500" textWrap="true" />
 
         <StackLayout v-else class="space-y-3">
+          <Label :text="'当前角色：' + characterName" class="text-sm text-gray-600" />
           <Label text="System Prompt" class="text-sm text-gray-600" />
           <TextView v-model="systemPrompt" class="p-2 border rounded" rows="8" textWrap="true" />
 

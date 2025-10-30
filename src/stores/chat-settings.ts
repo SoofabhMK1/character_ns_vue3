@@ -5,6 +5,7 @@ import type { ApiSetting } from '../../types/api-setting';
 
 export const useChatSettingsStore = defineStore('chatSettings', {
   state: () => ({
+    currentCharacterId: null as number | null,
     selectedApiId: null as number | null,
     streamingEnabled: false as boolean,
     debugMode: false as boolean,
@@ -13,7 +14,7 @@ export const useChatSettingsStore = defineStore('chatSettings', {
     errorMessage: '' as string,
   }),
   actions: {
-    async init() {
+    async initForCharacter(characterId: number) {
       if (this.isLoading) return;
       this.isLoading = true;
       this.errorMessage = '';
@@ -25,7 +26,8 @@ export const useChatSettingsStore = defineStore('chatSettings', {
         this.selectedApiId = chosen?.id ?? null;
 
         // 读取并应用持久化的聊天设置
-        const cs = await chatSettingsRepo.getChatSettings();
+        const cs = await chatSettingsRepo.getChatSettings(characterId);
+        this.currentCharacterId = characterId;
         this.systemPrompt = cs.system_prompt || this.systemPrompt;
         this.streamingEnabled = !!cs.streaming_enabled;
         this.debugMode = !!cs.debug_mode;
@@ -58,7 +60,8 @@ export const useChatSettingsStore = defineStore('chatSettings', {
     },
     async save(): Promise<void> {
       try {
-        await chatSettingsRepo.saveChatSettings(this.systemPrompt, this.streamingEnabled, this.debugMode);
+        if (this.currentCharacterId == null) throw new Error('未指定角色');
+        await chatSettingsRepo.saveChatSettings(this.currentCharacterId, this.systemPrompt, this.streamingEnabled, this.debugMode);
       } catch (e) {
         console.error('保存聊天设置失败:', e);
         this.errorMessage = '保存聊天设置失败';
