@@ -7,6 +7,7 @@ export const useChatSettingsStore = defineStore('chatSettings', {
   state: () => ({
     selectedApiId: null as number | null,
     streamingEnabled: false as boolean,
+    debugMode: false as boolean,
     systemPrompt: '你是一个细腻而真实的角色，请以第一人称、自然对话回复。' as string,
     isLoading: false as boolean,
     errorMessage: '' as string,
@@ -27,6 +28,7 @@ export const useChatSettingsStore = defineStore('chatSettings', {
         const cs = await chatSettingsRepo.getChatSettings();
         this.systemPrompt = cs.system_prompt || this.systemPrompt;
         this.streamingEnabled = !!cs.streaming_enabled;
+        this.debugMode = !!cs.debug_mode;
       } catch (e) {
         console.error('初始化聊天设置失败:', e);
         this.errorMessage = '初始化聊天设置失败';
@@ -48,12 +50,15 @@ export const useChatSettingsStore = defineStore('chatSettings', {
     setStreamingEnabled(enabled: boolean) {
       this.streamingEnabled = !!enabled;
     },
+    setDebugMode(enabled: boolean) {
+      this.debugMode = !!enabled;
+    },
     setSystemPrompt(text: string) {
       this.systemPrompt = text || '';
     },
     async save(): Promise<void> {
       try {
-        await chatSettingsRepo.saveChatSettings(this.systemPrompt, this.streamingEnabled);
+        await chatSettingsRepo.saveChatSettings(this.systemPrompt, this.streamingEnabled, this.debugMode);
       } catch (e) {
         console.error('保存聊天设置失败:', e);
         this.errorMessage = '保存聊天设置失败';

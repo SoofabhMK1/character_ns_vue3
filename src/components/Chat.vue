@@ -7,6 +7,7 @@ import { useAppStore } from '../stores/app';
 import { useChatStore } from '../stores/chat';
 import { useChatSettingsStore } from '../stores/chat-settings';
 import ChatSettings from './chat/ChatSettings.vue';
+import DebugPreview from './chat/DebugPreview.vue';
 import type { ChatMessage } from '../stores/chat';
 
 const props = defineProps<{ character: Character }>();
@@ -28,9 +29,29 @@ const onSend = async () => {
   const text = inputText.value.trim();
   if (!text) return;
   try {
-    await chatStore.sendMessage(props.character.id, text);
-    inputText.value = '';
-    await chatStore.sendAssistantReply(props.character);
+    if (chatSettingsStore.debugMode) {
+      const context = await chatStore.buildPreviewContext(props.character, text);
+      if (instance && instance.proxy) {
+        instance.proxy.$navigateTo(DebugPreview, {
+          props: {
+            context,
+            onContinue: async () => {
+              try {
+                await chatStore.sendMessage(props.character.id, text);
+                inputText.value = '';
+                await chatStore.sendAssistantReply(props.character);
+              } catch (e) {
+                console.error('发送消息失败:', e);
+              }
+            }
+          }
+        });
+      }
+    } else {
+      await chatStore.sendMessage(props.character.id, text);
+      inputText.value = '';
+      await chatStore.sendAssistantReply(props.character);
+    }
   } catch (e) {
     console.error('发送消息失败:', e);
   }

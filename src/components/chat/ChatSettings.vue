@@ -11,6 +11,7 @@ const instance = getCurrentInstance();
 
 const systemPrompt = ref<string>(store.systemPrompt);
 const streamingEnabled = ref<boolean>(store.streamingEnabled);
+const debugMode = ref<boolean>(store.debugMode);
 const isLoading = ref(false);
 const errorMessage = ref('');
 
@@ -21,6 +22,7 @@ onMounted(async () => {
     await store.init();
     systemPrompt.value = store.systemPrompt;
     streamingEnabled.value = store.streamingEnabled;
+    debugMode.value = store.debugMode;
   } catch (e) {
     console.error('加载聊天设置失败:', e);
     errorMessage.value = '加载聊天设置失败';
@@ -33,6 +35,7 @@ const save = async () => {
   try {
     store.setSystemPrompt(systemPrompt.value);
     store.setStreamingEnabled(streamingEnabled.value);
+    store.setDebugMode(debugMode.value);
     await store.save();
     if (instance && instance.proxy) instance.proxy.$navigateBack();
   } catch (e) {
@@ -65,6 +68,11 @@ const cancel = () => {
           <StackLayout class="mt-2" orientation="horizontal">
             <Label text="启用流式输出" class="text-sm text-gray-600 mr-2" />
             <Switch v-model="streamingEnabled" />
+          </StackLayout>
+
+          <StackLayout class="mt-2" orientation="horizontal">
+            <Label text="调试模式（发送前预览内容）" class="text-sm text-gray-600 mr-2" />
+            <Switch v-model="debugMode" />
           </StackLayout>
 
           <StackLayout class="mt-4">

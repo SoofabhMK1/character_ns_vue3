@@ -31,6 +31,26 @@ export const useChatStore = defineStore('chat', {
         this.isLoading = false;
       }
     },
+    async buildPreviewContext(character: Character, incomingText: string): Promise<Array<{ role: ChatRole; content: string }>> {
+      // 加载当前消息上下文
+      await this.loadMessages(character.id);
+      const existing = this.getMessages(character.id);
+      const chatSettings = useChatSettingsStore();
+      const protagonistStore = useProtagonistStore();
+      if (!protagonistStore.protagonist) {
+        try { await protagonistStore.loadProtagonist(); } catch {}
+      }
+      const sysExisting = existing.find(m => m.role === 'system');
+      const sysContent = sysExisting?.content || buildInitialSystemPrompt(character, protagonistStore.protagonist, chatSettings.systemPrompt);
+      const context: Array<{ role: ChatRole; content: string }> = [
+        { role: 'system', content: sysContent },
+        ...existing.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content }))
+      ];
+      if (incomingText && incomingText.trim()) {
+        context.push({ role: 'user', content: incomingText.trim() });
+      }
+      return context;
+    },
     async sendMessage(characterId: number, content: string) {
       try {
         const ts = new Date().toISOString();
@@ -72,24 +92,17 @@ export const useChatStore = defineStore('chat', {
 
         // 确保有当前角色的消息上下文
         await this.loadMessages(character.id);
-        const existing = this.getMessages(character.id);
-
-        // 首次对话：注入系统提示词（包含角色与主角信息）
-        if (!existing.some(m => m.role === 'system')) {
-          const protagonistStore = useProtagonistStore();
-          if (!protagonistStore.protagonist) {
-            try { await protagonistStore.loadProtagonist(); } catch {}
-          }
-          const sys = buildInitialSystemPrompt(character, protagonistStore.protagonist, chatSettings.systemPrompt);
-          // 系统提示持久化到数据库，以便审计；UI 层会过滤不显示
-          await chatRepo.addChatMessage(character.id, 'system', sys, new Date().toISOString());
-          // 重新加载一次，确保上下文包含系统提示
-          await this.loadMessages(character.id);
-        }
-
-        // 组装上下文（从数据库拉取，包含 system 提示）
         const context = await chatRepo.getChatMessages(character.id);
-        const contextForLLM = context.map(m => ({ role: m.role, content: m.content }));
+        const protagonistStore = useProtagonistStore();
+        if (!protagonistStore.protagonist) {
+          try { await protagonistStore.loadProtagonist(); } catch {}
+        }
+        const sysExisting = context.find(m => m.role === 'system');
+        const sysContent = sysExisting?.content || buildInitialSystemPrompt(character, protagonistStore.protagonist, chatSettings.systemPrompt);
+        const contextForLLM: Array<{ role: ChatRole; content: string }> = [
+          { role: 'system', content: sysContent },
+          ...context.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content }))
+        ];
         const stream = chatSettings.streamingEnabled;
         if (stream) {
           // 在 UI 中追加一个待写入的临时 assistant 消息并增量更新其内容
@@ -113,6 +126,10 @@ export const useChatStore = defineStore('chat', {
               this.messagesByCharacter[character.id] = [...cur];
             }, controller.signal);
             if (!this.streamAbortController?.signal?.aborted) {
+              // 审计：若系统提示尚未持久化，则补充写入
+              if (!sysExisting) {
+                await chatRepo.addChatMessage(character.id, 'system', sysContent, new Date().toISOString());
+              }
               await chatRepo.addChatMessage(character.id, 'assistant', finalContent, new Date().toISOString());
               await this.loadMessages(character.id);
             }
@@ -121,6 +138,10 @@ export const useChatStore = defineStore('chat', {
           }
         } else {
           const assistantContent = await chatCompletion(apiSetting, contextForLLM, false);
+          // 审计：若系统提示尚未持久化，则补充写入
+          if (!sysExisting) {
+            await chatRepo.addChatMessage(character.id, 'system', sysContent, new Date().toISOString());
+          }
           await chatRepo.addChatMessage(character.id, 'assistant', assistantContent, new Date().toISOString());
           await this.loadMessages(character.id);
         }
