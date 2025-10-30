@@ -40,40 +40,102 @@ export async function chatCompletion(
   if (stream && res.body) {
     const reader = res.body.getReader();
     const decoder = new TextDecoder('utf-8');
+    let buffer = '';
     let accumulated = '';
+    let finished = false;
     try {
-      while (true) {
+      while (!finished) {
         const { done, value } = await reader.read();
         if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        // OpenAI SSE: 按 "data: ...\n\n" 分割
-        const parts = chunk.split(/\n\n/);
-        for (const part of parts) {
-          const line = part.trim();
-          if (!line) continue;
-          if (line.startsWith('data:')) {
-            const jsonText = line.slice(5).trim();
-            if (jsonText === '[DONE]') {
-              break;
+        buffer += decoder.decode(value, { stream: true });
+
+        // 处理尽可能多的完整 SSE 事件（以空行分隔）
+        while (true) {
+          // 兼容 \n\n 与 \r\n\r\n
+          const idxLF = buffer.indexOf('\n\n');
+          const idxCRLF = buffer.indexOf('\r\n\r\n');
+          const idx = idxLF >= 0 && idxCRLF >= 0 ? Math.min(idxLF, idxCRLF) : (idxLF >= 0 ? idxLF : idxCRLF);
+          if (idx < 0) break; // 没有完整事件，等待更多数据
+
+          const event = buffer.slice(0, idx);
+          buffer = buffer.slice(idx + (idx === idxLF ? 2 : 4));
+
+          // 将事件按行拆分，拼接所有 data: 行
+          const lines = event.split(/\r?\n/);
+          let dataPayload = '';
+          for (const ln of lines) {
+            if (ln.startsWith('data:')) {
+              // 去掉前缀并按规范拼接（支持多行 data）
+              const part = ln.slice(5).trim();
+              if (dataPayload.length) dataPayload += '\n';
+              dataPayload += part;
             }
-            try {
-              const obj = JSON.parse(jsonText);
-              const delta = obj?.choices?.[0]?.delta?.content
-                ?? obj?.choices?.[0]?.text
-                ?? '';
-              if (delta) {
-                accumulated += delta;
-                if (onDelta) onDelta(delta);
-              }
-            } catch (_) {
-              // 忽略无法解析的行
+          }
+          if (!dataPayload) continue;
+          if (dataPayload === '[DONE]') { finished = true; break; }
+
+          // OpenAI Chat Completions：每个事件 data 是 JSON
+          try {
+            const obj = JSON.parse(dataPayload);
+            const choice = obj?.choices?.[0];
+            const delta = choice?.delta?.content
+              ?? choice?.message?.content
+              ?? choice?.text
+              ?? '';
+            if (delta) {
+              accumulated += delta;
+              if (onDelta) onDelta(delta);
+            }
+            // 有些片段只包含 role / function_call 等，忽略即可
+          } catch (err) {
+            // 有些第三方兼容端可能直接返回纯文本片段
+            if (typeof dataPayload === 'string' && dataPayload.length) {
+              accumulated += dataPayload;
+              if (onDelta) onDelta(dataPayload);
             }
           }
         }
       }
     } catch (e) {
-      // 流式读取异常，向上抛出
-      throw e;
+      throw e; // 流式读取异常，向上抛出
+    }
+    return accumulated;
+  }
+
+  // 流式回退：某些运行环境不支持 ReadableStream（如部分 NativeScript 实现）
+  if (stream && !res.body) {
+    const fullText = await res.text();
+    let accumulated = '';
+    // 以空行分割事件，逐个提取 data 负载
+    const events = fullText.split(/\r?\n\r?\n/);
+    for (const ev of events) {
+      const lines = ev.split(/\r?\n/);
+      let dataPayload = '';
+      for (const ln of lines) {
+        if (ln.startsWith('data:')) {
+          const part = ln.slice(5).trim();
+          if (dataPayload.length) dataPayload += '\n';
+          dataPayload += part;
+        }
+      }
+      if (!dataPayload) continue;
+      if (dataPayload === '[DONE]') break;
+      try {
+        const obj = JSON.parse(dataPayload);
+        const choice = obj?.choices?.[0];
+        const delta = choice?.delta?.content
+          ?? choice?.message?.content
+          ?? choice?.text
+          ?? '';
+        if (delta) {
+          accumulated += delta;
+          if (onDelta) onDelta(delta);
+        }
+      } catch (_) {
+        // 回退到直接文本
+        accumulated += dataPayload;
+        if (onDelta) onDelta(dataPayload);
+      }
     }
     return accumulated;
   }

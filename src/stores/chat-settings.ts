@@ -21,6 +21,11 @@ export const useChatSettingsStore = defineStore('chatSettings', {
         const def = list.find(s => (s as any).is_default === 1 || (s as any).is_default === true);
         const chosen = def || list[0];
         this.selectedApiId = chosen?.id ?? null;
+
+        // 读取并应用持久化的聊天设置
+        const cs = await databaseService.getChatSettings();
+        this.systemPrompt = cs.system_prompt || this.systemPrompt;
+        this.streamingEnabled = !!cs.streaming_enabled;
       } catch (e) {
         console.error('初始化聊天设置失败:', e);
         this.errorMessage = '初始化聊天设置失败';
@@ -44,6 +49,15 @@ export const useChatSettingsStore = defineStore('chatSettings', {
     },
     setSystemPrompt(text: string) {
       this.systemPrompt = text || '';
+    },
+    async save(): Promise<void> {
+      try {
+        await databaseService.saveChatSettings(this.systemPrompt, this.streamingEnabled);
+      } catch (e) {
+        console.error('保存聊天设置失败:', e);
+        this.errorMessage = '保存聊天设置失败';
+        throw e;
+      }
     },
     clearError() {
       this.errorMessage = '';

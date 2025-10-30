@@ -33,6 +33,7 @@ const save = async () => {
   try {
     store.setSystemPrompt(systemPrompt.value);
     store.setStreamingEnabled(streamingEnabled.value);
+    await store.save();
     if (instance && instance.proxy) instance.proxy.$navigateBack();
   } catch (e) {
     console.error('保存聊天设置失败:', e);

@@ -123,6 +123,27 @@ class DatabaseService {
         await this.database.execSQL(createChatSql);
         console.log('\'chat_messages\' 表已准备就绪');
 
+        // 建 chat_settings 表（全局设置，仅一条记录）
+        const createChatSettingsSql = `
+          CREATE TABLE IF NOT EXISTS chat_settings (
+              id INTEGER PRIMARY KEY CHECK (id = 1),
+              system_prompt TEXT NOT NULL DEFAULT '',
+              streaming_enabled INTEGER NOT NULL DEFAULT 0,
+              updated_at TEXT NOT NULL
+          );`;
+        await this.database.execSQL(createChatSettingsSql);
+        // 若不存在记录则插入默认值
+        const exists = await this.database.get('SELECT COUNT(*) as count FROM chat_settings WHERE id = 1');
+        if (!exists || exists[0] === 0) {
+          const now = new Date().toISOString();
+          await this.database.execSQL('INSERT INTO chat_settings (id, system_prompt, streaming_enabled, updated_at) VALUES (1, ?, ?, ?)', [
+            '你是一个细腻而真实的角色，请以第一人称、自然对话回复。',
+            0,
+            now,
+          ]);
+        }
+        console.log('\'chat_settings\' 表已准备就绪');
+
         // 植入初始数据（仅当为空）
         await this.seedInitialData();
         await this.seedProtagonistInitialData();
@@ -414,6 +435,34 @@ class DatabaseService {
     await this.init();
     const sql = `DELETE FROM chat_messages WHERE character_id = ?;`;
     await this.database.execSQL(sql, [characterId]);
+  }
+
+  // ===== Chat Settings (Global) =====
+  public async getChatSettings(): Promise<{ system_prompt: string; streaming_enabled: boolean; updated_at: string }> {
+    await this.init();
+    const row = await this.database.get('SELECT system_prompt, streaming_enabled, updated_at FROM chat_settings WHERE id = 1');
+    if (!row) {
+      const now = new Date().toISOString();
+      await this.database.execSQL('INSERT INTO chat_settings (id, system_prompt, streaming_enabled, updated_at) VALUES (1, ?, ?, ?)', [
+        '', 0, now
+      ]);
+      return { system_prompt: '', streaming_enabled: false, updated_at: now };
+    }
+    return {
+      system_prompt: row[0] || '',
+      streaming_enabled: !!row[1],
+      updated_at: row[2] || new Date().toISOString(),
+    };
+  }
+
+  public async saveChatSettings(systemPrompt: string, streamingEnabled: boolean): Promise<void> {
+    await this.init();
+    const now = new Date().toISOString();
+    await this.database.execSQL('UPDATE chat_settings SET system_prompt = ?, streaming_enabled = ?, updated_at = ? WHERE id = 1', [
+      systemPrompt || '',
+      streamingEnabled ? 1 : 0,
+      now,
+    ]);
   }
 
 
