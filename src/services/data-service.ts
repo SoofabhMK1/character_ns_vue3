@@ -1,4 +1,7 @@
 import { knownFolders, File } from '@nativescript/core';
+// 聊天角色联合类型（模块级别定义，供数据服务使用）
+const VALID_CHAT_ROLES = ['user','assistant','system'] as const;
+export type ChatRole = typeof VALID_CHAT_ROLES[number];
 import CryptoJS from 'crypto-js';
 import { Character } from '../../types/character'; // 引入我们之前定义的模型
 import type { Protagonist } from '../../types/protagonist';
@@ -374,14 +377,21 @@ class DatabaseService {
   }
 
   // ===== Chat Messages =====
-  public async getChatMessages(characterId: number): Promise<{ id: number; character_id: number; role: string; content: string; created_at: string }[]> {
+  public async getChatMessages(characterId: number): Promise<{ id: number; character_id: number; role: ChatRole; content: string; created_at: string }[]> {
     // 确保数据库已初始化，防止未就绪导致 this.database 为 undefined
     await this.init();
     const rows = await this.database.all('SELECT id, character_id, role, content, created_at FROM chat_messages WHERE character_id = ? ORDER BY id ASC', [characterId]);
-    return rows.map((r: any[]) => ({ id: r[0], character_id: r[1], role: r[2], content: r[3], created_at: r[4] }));
+    const valid = new Set(VALID_CHAT_ROLES as readonly string[]);
+    return rows.map((r: any[]) => ({
+      id: r[0],
+      character_id: r[1],
+      role: (valid.has(r[2]) ? r[2] : 'assistant') as ChatRole,
+      content: r[3],
+      created_at: r[4]
+    }));
   }
 
-  public async addChatMessage(characterId: number, role: string, content: string, createdAt?: string): Promise<void> {
+  public async addChatMessage(characterId: number, role: ChatRole, content: string, createdAt?: string): Promise<void> {
     await this.init();
     const sql = `INSERT INTO chat_messages (character_id, role, content, created_at) VALUES (?, ?, ?, ?);`;
     const ts = createdAt || new Date().toISOString();
@@ -398,6 +408,12 @@ class DatabaseService {
     await this.init();
     const sql = `DELETE FROM chat_messages WHERE id = ?;`;
     await this.database.execSQL(sql, [id]);
+  }
+
+  public async deleteAllChatMessagesForCharacter(characterId: number): Promise<void> {
+    await this.init();
+    const sql = `DELETE FROM chat_messages WHERE character_id = ?;`;
+    await this.database.execSQL(sql, [characterId]);
   }
 
 

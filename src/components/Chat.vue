@@ -1,18 +1,23 @@
 <script lang="ts" setup>
-import { ref, onMounted, watch, computed } from 'nativescript-vue';
+import { ref, onMounted, watch, computed, getCurrentInstance } from 'nativescript-vue';
 import AppHeader from './AppHeader.vue';
 import type { Character } from '../../types/character';
 import { action, prompt, confirm } from '@nativescript/core';
 import { useAppStore } from '../stores/app';
 import { useChatStore } from '../stores/chat';
+import { useChatSettingsStore } from '../stores/chat-settings';
+import ChatSettings from './chat/ChatSettings.vue';
 import type { ChatMessage } from '../stores/chat';
 
 const props = defineProps<{ character: Character }>();
 const appStore = useAppStore();
 const chatStore = useChatStore();
+const chatSettingsStore = useChatSettingsStore();
+const instance = getCurrentInstance();
 const isLoading = computed(() => chatStore.isLoading);
 const errorMessage = computed(() => chatStore.errorMessage);
-const messages = computed<ChatMessage[]>(() => chatStore.getMessages(props.character.id));
+// UI 层不显示系统提示消息
+const messages = computed<ChatMessage[]>(() => chatStore.getMessages(props.character.id).filter(m => m.role !== 'system'));
 const inputText = ref('');
 
 const loadMessages = async () => {
@@ -25,6 +30,7 @@ const onSend = async () => {
   try {
     await chatStore.sendMessage(props.character.id, text);
     inputText.value = '';
+    await chatStore.sendAssistantReply(props.character);
   } catch (e) {
     console.error('发送消息失败:', e);
   }
@@ -32,12 +38,14 @@ const onSend = async () => {
 
 onMounted(async () => {
   if (appStore.dbReady) {
+    await chatSettingsStore.init();
     await loadMessages();
   } else {
     const stop = watch(
       () => appStore.dbReady,
       async (ready) => {
         if (ready) {
+          await chatSettingsStore.init();
           await loadMessages();
           stop();
         }
@@ -48,8 +56,11 @@ onMounted(async () => {
 
 const titleText = `${props.character.core_identity.last_name}${props.character.core_identity.first_name}`;
 const onSettingsTap = () => {
-  // 设置按钮目前不实现
-  try { console.log('打开聊天设置'); } catch {}
+  try {
+    if (instance && instance.proxy) {
+      instance.proxy.$navigateTo(ChatSettings, { props: { characterId: props.character.id } });
+    }
+  } catch {}
 };
 
 const onMessageLongPress = async (msg: ChatMessage) => {
