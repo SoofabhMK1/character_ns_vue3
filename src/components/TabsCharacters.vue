@@ -7,19 +7,14 @@ defineProps<{
   characters: Character[];
 }>();
 
-const emit = defineEmits<{ (e: 'moreTap', character: Character): void }>();
+const emit = defineEmits<{ (e: 'moreTap', character: Character): void; (e: 'chatTap', character: Character): void }>();
 
 const onMoreTap = (character: Character) => {
   emit('moreTap', character);
 };
 
 const onChatTap = (character: Character) => {
-  // 暂不实现跳转，保留点击占位
-  try {
-    console.log('Chat icon tapped for', character.core_identity.last_name + character.core_identity.first_name);
-  } catch {
-    // no-op
-  }
+  emit('chatTap', character);
 };
 </script>
 

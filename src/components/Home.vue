@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, getCurrentInstance, computed } from 'nativescript-vue';
 import CharacterDetail from './CharacterDetail.vue';
+import Chat from './Chat.vue';
 import AddCharacter from './AddCharacter.vue';
 import AppHeader from './AppHeader.vue';
 import MainTabs from './MainTabs.vue';
@@ -53,6 +54,14 @@ const onMoreTap = (character: Character) => {
   }
 };
 
+const onChatTap = (character: Character) => {
+  if (instance && instance.proxy) {
+    instance.proxy.$navigateTo(Chat, {
+      props: { character }
+    });
+  }
+};
+
 // 进入页面时刷新角色列表，以便新增后返回能看到更新
 const reloadCharacters = async () => {
   try {
@@ -86,6 +95,7 @@ const openAddCharacter = () => {
             :errorMessage="errorMessage"
             :characters="characters"
             @moreTap="onMoreTap"
+            @chatTap="onChatTap"
           />
         </template>
 

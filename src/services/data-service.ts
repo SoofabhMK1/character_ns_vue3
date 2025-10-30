@@ -108,6 +108,18 @@ class DatabaseService {
           // 如果列已存在会报错，忽略即可
         }
 
+        // 建 chat_messages 表
+        const createChatSql = `
+          CREATE TABLE IF NOT EXISTS chat_messages (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              character_id INTEGER NOT NULL,
+              role TEXT NOT NULL,
+              content TEXT NOT NULL,
+              created_at TEXT NOT NULL
+          );`;
+        await this.database.execSQL(createChatSql);
+        console.log('\'chat_messages\' 表已准备就绪');
+
         // 植入初始数据（仅当为空）
         await this.seedInitialData();
         await this.seedProtagonistInitialData();
@@ -359,6 +371,33 @@ class DatabaseService {
   public async setDefaultApiSetting(id: number): Promise<void> {
     await this.database.execSQL(`UPDATE api_settings SET is_default = 0;`);
     await this.database.execSQL(`UPDATE api_settings SET is_default = 1 WHERE id = ?;`, [id]);
+  }
+
+  // ===== Chat Messages =====
+  public async getChatMessages(characterId: number): Promise<{ id: number; character_id: number; role: string; content: string; created_at: string }[]> {
+    // 确保数据库已初始化，防止未就绪导致 this.database 为 undefined
+    await this.init();
+    const rows = await this.database.all('SELECT id, character_id, role, content, created_at FROM chat_messages WHERE character_id = ? ORDER BY id ASC', [characterId]);
+    return rows.map((r: any[]) => ({ id: r[0], character_id: r[1], role: r[2], content: r[3], created_at: r[4] }));
+  }
+
+  public async addChatMessage(characterId: number, role: string, content: string, createdAt?: string): Promise<void> {
+    await this.init();
+    const sql = `INSERT INTO chat_messages (character_id, role, content, created_at) VALUES (?, ?, ?, ?);`;
+    const ts = createdAt || new Date().toISOString();
+    await this.database.execSQL(sql, [characterId, role, content, ts]);
+  }
+
+  public async updateChatMessage(id: number, content: string): Promise<void> {
+    await this.init();
+    const sql = `UPDATE chat_messages SET content = ? WHERE id = ?;`;
+    await this.database.execSQL(sql, [content, id]);
+  }
+
+  public async deleteChatMessage(id: number): Promise<void> {
+    await this.init();
+    const sql = `DELETE FROM chat_messages WHERE id = ?;`;
+    await this.database.execSQL(sql, [id]);
   }
 
 
