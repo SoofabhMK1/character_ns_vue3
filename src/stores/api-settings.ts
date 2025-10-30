@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { databaseService } from '../services/data-service';
+import * as apiRepo from '../repositories/api-settings';
 import type { ApiSetting } from '../../types/api-setting';
 
 export const useApiSettingsStore = defineStore('apiSettings', {
@@ -13,7 +13,7 @@ export const useApiSettingsStore = defineStore('apiSettings', {
       try {
         this.isLoading = true;
         this.errorMessage = '';
-        const rows = await databaseService.getApiSettings();
+        const rows = await apiRepo.getApiSettings();
         this.list = rows;
       } catch (e) {
         console.error('加载 API 设置失败:', e);
@@ -29,7 +29,7 @@ export const useApiSettingsStore = defineStore('apiSettings', {
         if (existingSameName) {
           throw new Error('名称已存在');
         }
-        await databaseService.saveApiSetting(setting);
+        await apiRepo.saveApiSetting(setting);
         await this.loadAll();
       } catch (e) {
         console.error('保存 API 设置失败:', e);
@@ -39,7 +39,7 @@ export const useApiSettingsStore = defineStore('apiSettings', {
     },
     async remove(id: number) {
       try {
-        await databaseService.deleteApiSetting(id);
+        await apiRepo.deleteApiSetting(id);
         await this.loadAll();
       } catch (e) {
         console.error('删除 API 设置失败:', e);
@@ -49,7 +49,7 @@ export const useApiSettingsStore = defineStore('apiSettings', {
     },
     async setDefault(id: number) {
       try {
-        await databaseService.setDefaultApiSetting(id);
+        await apiRepo.setDefaultApiSetting(id);
         await this.loadAll();
       } catch (e) {
         console.error('设置默认连接失败:', e);

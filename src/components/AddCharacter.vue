@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { ref } from 'nativescript-vue';
 import AppHeader from './AppHeader.vue';
-import { databaseService } from '../services/data-service';
+import * as charactersRepo from '../repositories/characters';
 import type { Character } from '../../types/character';
 
 const jsonInput = ref<string>('');
@@ -39,7 +39,7 @@ const onSave = async () => {
       errorMessage.value = '格式错误:\n' + errs.join('\n');
       return;
     }
-    await databaseService.saveCharacter(parsed as Character);
+    await charactersRepo.saveCharacter(parsed as Character);
     // 保存成功后返回
     (global as any).__ax || null; // no-op to satisfy bundlers
     (require('@nativescript/core').Frame as any).topmost().goBack();

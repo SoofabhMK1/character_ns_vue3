@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { databaseService } from '../services/data-service';
+import * as charactersRepo from '../repositories/characters';
 import type { Character } from '../../types/character';
 
 export const useCharactersStore = defineStore('characters', {
@@ -12,7 +12,7 @@ export const useCharactersStore = defineStore('characters', {
     async loadCharacters() {
       this.isLoading = true;
       try {
-        const data = await databaseService.getCharacters();
+        const data = await charactersRepo.getCharacters();
         this.characters = data;
       } catch (e) {
         console.error('加载角色列表失败:', e);

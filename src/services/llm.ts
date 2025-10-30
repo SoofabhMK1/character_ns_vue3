@@ -1,7 +1,6 @@
 import type { ApiSetting } from '../../types/api-setting';
-import type { ChatRole } from './data-service';
-
-export type ChatMessagePayload = { role: ChatRole; content: string };
+import type { ChatMessagePayload } from '../../types/chat';
+import { isNativeAbortAvailable } from './abort-controller';
 
 function normalizeBaseUrl(url: string): string {
   return url.replace(/\/$/, '');
@@ -11,7 +10,8 @@ export async function chatCompletion(
   setting: ApiSetting,
   messages: ChatMessagePayload[],
   stream: boolean,
-  onDelta?: (text: string) => void
+  onDelta?: (text: string) => void,
+  signal?: AbortSignal | { aborted: boolean }
 ): Promise<string> {
   // 目前仅支持 OpenAI 协议格式
   const base = normalizeBaseUrl(setting.base_url);
@@ -31,6 +31,7 @@ export async function chatCompletion(
       ...(stream ? { 'Accept': 'text/event-stream' } : {}),
     },
     body: JSON.stringify(body),
+    ...(isNativeAbortAvailable() && signal ? { signal: signal as AbortSignal } : {}),
   });
   if (!res.ok) {
     const text = await res.text();
@@ -47,6 +48,11 @@ export async function chatCompletion(
       while (!finished) {
         const { done, value } = await reader.read();
         if (done) break;
+        if (signal?.aborted) {
+          try { await reader.cancel(); } catch {}
+          finished = true;
+          break;
+        }
         buffer += decoder.decode(value, { stream: true });
 
         // 处理尽可能多的完整 SSE 事件（以空行分隔）
@@ -84,20 +90,21 @@ export async function chatCompletion(
               ?? '';
             if (delta) {
               accumulated += delta;
-              if (onDelta) onDelta(delta);
+              if (!signal?.aborted && onDelta) onDelta(delta);
             }
             // 有些片段只包含 role / function_call 等，忽略即可
           } catch (err) {
             // 有些第三方兼容端可能直接返回纯文本片段
             if (typeof dataPayload === 'string' && dataPayload.length) {
               accumulated += dataPayload;
-              if (onDelta) onDelta(dataPayload);
+              if (!signal?.aborted && onDelta) onDelta(dataPayload);
             }
           }
         }
       }
     } catch (e) {
-      throw e; // 流式读取异常，向上抛出
+      // 如果是主动取消，抛出中止错误给调用方处理
+      throw e;
     }
     return accumulated;
   }

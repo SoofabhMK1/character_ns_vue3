@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { databaseService } from '../services/data-service';
+import * as protagonistRepo from '../repositories/protagonist';
 import type { Protagonist } from '../../types/protagonist';
 
 type ProtagonistState = {
@@ -21,7 +21,7 @@ export const useProtagonistStore = defineStore('protagonist', {
       this.isLoading = true;
       this.errorMessage = '';
       try {
-        const p = await databaseService.getProtagonist();
+        const p = await protagonistRepo.getProtagonist();
         if (!p) {
           this.errorMessage = '未获取到主角数据';
           return;
@@ -37,7 +37,7 @@ export const useProtagonistStore = defineStore('protagonist', {
     },
     async saveProtagonist(p: Protagonist): Promise<void> {
       try {
-        await databaseService.saveProtagonist(p);
+        await protagonistRepo.saveProtagonist(p);
         this.protagonist = p;
       } catch (e) {
         console.error('保存主角信息失败:', e);

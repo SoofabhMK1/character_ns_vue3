@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
-import { databaseService } from '../services/data-service';
+import * as chatSettingsRepo from '../repositories/chat-settings';
+import * as apiSettingsRepo from '../repositories/api-settings';
 import type { ApiSetting } from '../../types/api-setting';
 
 export const useChatSettingsStore = defineStore('chatSettings', {
@@ -16,14 +17,14 @@ export const useChatSettingsStore = defineStore('chatSettings', {
       this.isLoading = true;
       this.errorMessage = '';
       try {
-        const list = await databaseService.getApiSettings();
+        const list = await apiSettingsRepo.getApiSettings();
         // 优先使用 is_default；否则选第一条；若没有配置，保持 null（调用时需检查）
-        const def = list.find(s => (s as any).is_default === 1 || (s as any).is_default === true);
+        const def = list.find(s => (s as any).is_default === 1 || (s as any).is_default === true || !!(s as any).is_default);
         const chosen = def || list[0];
         this.selectedApiId = chosen?.id ?? null;
 
         // 读取并应用持久化的聊天设置
-        const cs = await databaseService.getChatSettings();
+        const cs = await chatSettingsRepo.getChatSettings();
         this.systemPrompt = cs.system_prompt || this.systemPrompt;
         this.streamingEnabled = !!cs.streaming_enabled;
       } catch (e) {
@@ -35,10 +36,10 @@ export const useChatSettingsStore = defineStore('chatSettings', {
     },
     async getSelectedApiSetting(): Promise<ApiSetting | null> {
       if (typeof this.selectedApiId === 'number') {
-        return await databaseService.getApiSettingById(this.selectedApiId) as ApiSetting | null;
+        return await apiSettingsRepo.getApiSettingById(this.selectedApiId);
       }
-      const list = await databaseService.getApiSettings();
-      const def = list.find(s => (s as any).is_default === 1 || (s as any).is_default === true);
+      const list = await apiSettingsRepo.getApiSettings();
+      const def = list.find(s => (s as any).is_default === 1 || (s as any).is_default === true || !!(s as any).is_default);
       return def || list[0] || null;
     },
     setSelectedApiId(id: number | null) {
@@ -52,7 +53,7 @@ export const useChatSettingsStore = defineStore('chatSettings', {
     },
     async save(): Promise<void> {
       try {
-        await databaseService.saveChatSettings(this.systemPrompt, this.streamingEnabled);
+        await chatSettingsRepo.saveChatSettings(this.systemPrompt, this.streamingEnabled);
       } catch (e) {
         console.error('保存聊天设置失败:', e);
         this.errorMessage = '保存聊天设置失败';

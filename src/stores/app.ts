@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { databaseService } from '../services/data-service';
+import { initializeDatabase } from '../services/db/init';
 
 export const useAppStore = defineStore('app', {
   state: () => ({
@@ -12,7 +12,7 @@ export const useAppStore = defineStore('app', {
       if (this.dbReady || this.isInitializing) return;
       this.isInitializing = true;
       try {
-        await databaseService.init();
+        await initializeDatabase();
         this.dbReady = true;
       } catch (e) {
         console.error('应用初始化失败:', e);

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref, onMounted, watch, computed, getCurrentInstance } from 'nativescript-vue';
+import { ref, onMounted, onUnmounted, watch, computed, getCurrentInstance } from 'nativescript-vue';
 import AppHeader from './AppHeader.vue';
 import type { Character } from '../../types/character';
 import { action, prompt, confirm } from '@nativescript/core';
@@ -52,6 +52,11 @@ onMounted(async () => {
       }
     );
   }
+});
+
+onUnmounted(() => {
+  // 组件销毁时，取消可能正在进行的流式回复，避免销毁后更新导致崩溃
+  try { chatStore.cancelStreaming(); } catch {}
 });
 
 const titleText = `${props.character.core_identity.last_name}${props.character.core_identity.first_name}`;
